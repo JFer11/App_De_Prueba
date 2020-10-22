@@ -1,8 +1,10 @@
 from flask import Flask
+from flask_bcrypt import Bcrypt
 from training.main import init_db
-app = Flask(__name__)
-from training.controllers.allControllers import *
 
+app = Flask(__name__)
+from training.controllers.all_controllers import *
+bcrypt = Bcrypt(app)
 
 def main():
     init_db()
