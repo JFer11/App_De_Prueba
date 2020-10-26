@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Bienvenido</title>
+</head>
+<body>
+
+	{% from "macro_Form_Index.html" import render_field %}
+
+	<form method=post>	
+		<dl>
+	    {{ render_field(form.username) }}
+	    {{ render_field(form.email) }}
+	    {{ render_field(form.password) }}
+	    {{ render_field(form.confirm) }}
+	    {{ render_field(form.accept_tos) }}
+	    <input type="submit" name="boton">
+  		</dl>
+	</form>
+
+	{%if alert%}
+		<p>Ingrese correctamente los datos por favor</p>
+	{%endif%}
+
+
+</body>
+</html>
