@@ -8,8 +8,32 @@ from flask import session as sesion
 from training.models.users import User
 from training.app_init import bcrypt
 from markupsafe import escape
+from flask import g
+from functools import wraps
+from training.app_init import mail, Message
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
+@app.before_request
+def user_to_g():
+    username = sesion.get('username')
+    if username is not None:
+        # Suponemos que el usuario si tiene la session, siempre va a estar en la base de datos
+        user = session.query(User).filter_by(id=username).first()
+        g.user = user
+    return None
+
+
+def login_required(function):
+    @wraps(function)
+    #wrap.__name__ = function.__name__
+    def wrap(*args, **kwargs):
+        username = sesion.get('username')
+        if username is None:
+            return "Error, must be logged in"
+            # Redirigir a un HTML de error y algo que trabaje el error, capaz en el header. QUe se puede hacer cuando no
+            # esta logeado?
+        return function(*args, **kwargs)
+    return wrap
 
 @app.route('/')
 def primera():
@@ -52,12 +76,16 @@ def sign_in():
 
         if our_user is not None:
             # Si lo encontre en la base, me meto aca
-
-            # Chequea el password a ver si coincide
-            if bcrypt.check_password_hash(our_user.password, request.form['password']):
+            # Chequea el password a ver si coincide y si el mail esta validado
+            if bcrypt.check_password_hash(our_user.password, request.form['password']) and our_user.mail_validation:
                 # Se le da la cookie session
                 sesion['username'] = request.form['username']
                 return redirect(url_for('inside'))
+
+            if not our_user.mail_validation:
+                return render_template('login.html', form=form, alert_mail=True)
+
+            #Solo pasa si la contraseña esta mal
             return render_template('login.html', form=form, alert=True)
 
         else:
@@ -67,6 +95,7 @@ def sign_in():
 
 
 @app.route('/inside')
+@login_required
 def inside():
     if 'username' in sesion:
         return "Ya estas registrado como --> " + str(sesion['username'])
@@ -75,6 +104,7 @@ def inside():
 
 
 @app.route('/logout')
+@login_required
 def logout():
     if 'username' in sesion:
         a = sesion['username']
@@ -84,5 +114,30 @@ def logout():
 
 
 @app.route('/ver')
+@login_required
 def ver():
     return sesion.get('username')
+
+
+@app.route('/mail')
+def prueba_mail():
+    email = 'donnetta7@adriveriep.com'
+    msg = Message('Confirm Email', sender='anthony@prettyprinted.com', recipients=[email])
+    msg.body = "Bienvenido"
+    mail.send(msg)
+    return "0"
+
+@app.route('/mail/validation/<string:username>')
+def email_verification(username):
+    our_user = session.query(User).filter_by(id=username).first()
+
+    if our_user is None:
+        return "No existe ese usuario"
+    else:
+        if our_user.mail_validation:
+            return "El email de {} ya estaba validado".format(our_user.username)
+        else:
+            #No me gusta esta manera de updatear
+            our_user.mail_validation = True
+            session.commit()
+            return "Se valido el email de {}".format(our_user.username)
