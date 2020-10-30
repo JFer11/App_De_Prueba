@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recover Page</title>
+</head>
+<body>
+    {% from "macro_Form_Index.html" import render_field %}
+
+        <form method=post>
+            <dl>
+            {{ render_field(form.email) }}
+            <input type="submit" name="boton">
+            </dl>
+        </form>
+
+    {%if accepted_request%}
+        <p>If the email exists, a retrieval URL was sent.</p>
+    {%endif%}
+
+</body>
+</html>
