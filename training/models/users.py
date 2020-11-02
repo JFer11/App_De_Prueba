@@ -1,16 +1,15 @@
-from sqlalchemy import Column, String, DateTime, Boolean
 from datetime import datetime
-from training import main
+from training.app_init import db
 
 
-class User(main.Base):
+class User(db.Model):
 	__tablename__ = 'users'
-	id = Column(String(50), primary_key=True)
-	username = Column(String(50), nullable=False, unique=True)
-	password = Column(String(1000), nullable=False)
-	email = Column(String(50), nullable=False, unique=True)
-	mail_validation = Column(Boolean, unique=False, default=False)
-	created_at = Column(DateTime(), default=datetime.now())
+	id = db.Column(db.String(50), primary_key=True)
+	username = db.Column(db.String(50), nullable=False, unique=True)
+	password = db.Column(db.String(1000), nullable=False)
+	email = db.Column(db.String(50), nullable=False, unique=True)
+	mail_validation = db.Column(db.Boolean, unique=False, default=False)
+	created_at = db.Column(db.DateTime(), default=datetime.now())
 
 	def __str__(self):
 		return self.username
