@@ -2,14 +2,17 @@ from flask import render_template, make_response, request, redirect, url_for, g
 from flask import session as sesion
 from flask_mail import Message
 from functools import wraps
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 
 from training.app import app, db, mail, bcrypt
-from training.controllers import index_form, login_form, send_email_form
-from training.models.users import User
+from training.controllers import index_form, login_form, recover_form, new_password_form, send_email_form
 from training.controllers.admin import admin_web
 from training.background_tasks.tasks import send_email_async
+from training.models.users import User
+
 
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+s = URLSafeTimedSerializer(app.secret_key)
 
 
 @app.before_request
@@ -159,6 +162,50 @@ def send_email():
             mail.send(msg)
             return render_template('email_form_template.html', form=form, sended=True)
         else:
+
             send_email_async(msg)
             return render_template('email_form_template.html', form=form, sended=True)
     return render_template('email_form_template.html', form=form)
+
+  
+@app.route('/recover', methods=['GET', 'POST'])
+def recover_account():
+    form = recover_form.RecoverForm()
+
+    if request.method == 'POST':
+        our_user = User.query.filter_by(email=request.form['email']).first()
+        #our_user = session.query(User).filter_by(email=request.form['email']).first()
+        if our_user is not None:
+            send_token_to_email(request.form['email'])
+            return render_template('recover.html', form=form, accepted_request=True)
+        else:
+            return render_template('recover.html', form=form, accepted_request=True)
+
+    return render_template('recover.html', form=form)
+
+
+def send_token_to_email(email):
+    token = s.dumps(email, salt='recover-email')
+    msg = Message('Recover Email', sender='no_reply@system.com', recipients=[email])
+    link = url_for('validate_token', token=token, _external=True)
+    msg.body = f"Haga click aqui para recuperar su cuenta: {link} "
+    mail.send(msg)
+
+
+@app.route('/recover/validate/<token>', methods=['GET', 'POST'])
+def validate_token(token):
+    try:
+        email = s.loads(token, salt='recover-email', max_age=600)
+    except SignatureExpired:
+        return "The token expired!"
+
+    form = new_password_form.NewPasswordForm(request.form)
+
+    if request.method == 'POST' and form.validate():
+        #our_user = session.query(User).filter_by(email=email).first()
+        our_user = User.query.filter_by(email=email).first()
+        password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
+        our_user.password = password
+        db.session.commit()
+        return redirect(url_for('sign_in'))
+    return render_template('new_password.html', form=form)
