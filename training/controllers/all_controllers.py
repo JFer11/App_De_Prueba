@@ -18,6 +18,8 @@ def user_to_g():
         # Suponemos que el usuario si tiene la session, siempre va a estar en la base de datos
         user = db.session.query(User).filter_by(id=username).first()
         g.user = user
+    else:
+        g.user = None
     return None
 
 
@@ -27,7 +29,7 @@ def login_required(function):
     def wrap(*args, **kwargs):
         username = sesion.get('username')
         if username is None:
-            return "Error, must be logged in"
+            return render_template("no_login.html"), 411
             # Redirigir a un HTML de error y algo que trabaje el error, capaz en el header. QUe se puede hacer cuando no
             # esta logeado?
         return function(*args, **kwargs)
@@ -36,7 +38,8 @@ def login_required(function):
 
 @app.route('/')
 def primera():
-    return make_response("HOLAAAAAA")
+    return render_template("nothing.html"), 200
+
 
 
 @app.route('/index', methods=['GET', 'POST'])
@@ -58,12 +61,12 @@ def signup():
             db.session.commit()
 
             # Redireccionar a otro HTML que entre a la pagina
-            return redirect(url_for('sign_in'))
+            return redirect(url_for('sign_in')), 201
         else:
             form = index_form.RegistrationForm(request.form)
-            return render_template('index.html', form=form, alert=True)
+            return render_template('index.html', form=form, alert=True), 400
 
-    return render_template('index.html', form=form, alert=False)
+    return render_template('index.html', form=form, alert=False), 200
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -79,18 +82,18 @@ def sign_in():
             if bcrypt.check_password_hash(our_user.password, request.form['password']) and our_user.mail_validation:
                 # Se le da la cookie session
                 sesion['username'] = request.form['username']
-                return redirect(url_for('inside'))
+                return redirect(url_for('inside')), 200
 
             if not our_user.mail_validation:
-                return render_template('login.html', form=form, alert_mail=True)
+                return render_template('login.html', form=form, alert_mail=True), 451
 
             #Solo pasa si la contraseña esta mal
-            return render_template('login.html', form=form, alert=True)
+            return render_template('login.html', form=form, alert=True), 452
 
         else:
-            return render_template('login.html', form=form, alert=True)
+            return render_template('login.html', form=form, alert=True), 450
 
-    return render_template('login.html', form=form)
+    return render_template('login.html', form=form), 800
 
 
 @app.route('/inside')
@@ -124,7 +127,7 @@ def prueba_mail():
     msg = Message('Confirm Email', sender='anthony@prettyprinted.com', recipients=[email])
     msg.body = "Bienvenido"
     mail.send(msg)
-    return "0"
+    return "0", 200
 
 
 @app.route('/mail/validation/<string:username>')
@@ -132,15 +135,15 @@ def email_verification(username):
     our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:
-        return "No existe ese usuario"
+        return "No existe ese usuario", 450
     else:
         if our_user.mail_validation:
-            return "El email de {} ya estaba validado".format(our_user.username)
+            return "El email de {} ya estaba validado".format(our_user.username), 205
         else:
             #No me gusta esta manera de updatear
             our_user.mail_validation = True
             db.session.commit()
-            return "Se valido el email de {}".format(our_user.username)
+            return "Se valido el email de {}".format(our_user.username), 200
 
 
 @app.route('/send/email', methods=['GET', 'POST'])
@@ -171,3 +174,11 @@ def send_email_async(msg, form):
     job = app.task_queue.enqueue(send_email_function, msg)
     job.get_id()
     return render_template('email_form_template.html', form=form, sended=True)
+
+
+@app.route('/g')
+def test_g():
+    if g.user is None:
+        return "No  hay usuario logueado", 411
+    else:
+        return str(g.user), 200
