@@ -7,6 +7,7 @@ from training.app import app, db, mail, bcrypt
 from training.controllers import index_form, login_form, send_email_form
 from training.models.users import User
 from training.controllers.admin import admin_web
+from training.background_tasks.tasks import send_email_async
 
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
@@ -151,23 +152,13 @@ def send_email():
         email_sender = request.form['email_sender']
         email_recipient = request.form['email_recipient']
         message_body = request.form['message_body']
+        message_body = request.form['message_body']
         msg = Message('Mail de prueba', sender=email_sender, recipients=[email_recipient])
         msg.body = message_body
         if 'send_now' in request.form:
             mail.send(msg)
             return render_template('email_form_template.html', form=form, sended=True)
         else:
-            return send_email_async(msg, form)
-
+            send_email_async(msg)
+            return render_template('email_form_template.html', form=form, sended=True)
     return render_template('email_form_template.html', form=form)
-
-
-def send_email_function(msg):
-    with app.app_context():
-        mail.send(msg)
-
-
-def send_email_async(msg, form):
-    job = app.task_queue.enqueue(send_email_function, msg)
-    job.get_id()
-    return render_template('email_form_template.html', form=form, sended=True)

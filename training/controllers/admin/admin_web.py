@@ -6,7 +6,7 @@ from training.app import db, app, bcrypt
 admin = Admin(app, name='Users admin', template_mode='bootstrap3')
 
 
-class MyModelView(ModelView):
+class UserModelView(ModelView):
     column_list = ('id', 'username', 'password', 'email', 'mail_validation', 'created_at')
     form_columns = ('id', 'username', 'password', 'email', 'created_at')
 
@@ -14,4 +14,4 @@ class MyModelView(ModelView):
         User.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
 
 
-admin.add_view(MyModelView(User, db.session))
+admin.add_view(UserModelView(User, db.session))
