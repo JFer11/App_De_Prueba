@@ -64,27 +64,6 @@ class BasicTests(unittest.TestCase):
             assert session.get('username') == 'Fernando'
 
 
-    def test_register_one_user(self):
-        with app.test_client() as client:
-            password = crypt_password('Fernando')
-            client.post('/index', data=dict(username="Fernando Gago", email="ElMejorEjemplo@g.com", password=password, confirm=password, accept_tos=True), follow_redirects=True)
-            our_user = User.query.filter_by(id="Fernando Gago").first()
-            assert our_user is not None
-
-
-    def test_register_more_users(self):
-        with app.test_client() as client:
-            passwords = [crypt_password('Fernando'), crypt_password('Gonzalo'), crypt_password('Nicolas'), crypt_password('Pedro')]
-            ids = []
-            for i in range(0,4):
-                client.post('/index', data=dict(username="Fernando Gago"+str(i), email="ElMejorEjemplo@g.com"+str(i), password=passwords[i],
-                                                confirm=passwords[i], accept_tos=True), follow_redirects=True)
-                ids.append("Fernando Gago"+str(i))
-
-            for id_user in ids:
-                our_user = User.query.filter_by(id=id_user).first()
-                assert our_user is not None
-
 
     def test_login_required_no_sesion(self):
         with app.test_client() as client:
@@ -141,45 +120,6 @@ class BasicTests(unittest.TestCase):
             assert response3.status_code == 411
 
 
-    def test_login_required_with_sesion(self):
-        with app.test_client() as client:
-            client.post('/index', data=dict(username="Fernando", email="ElMejorEjemplo@g.com", password='Fernando', confirm='Fernando', accept_tos=True), follow_redirects=False)
-            our_user = User.query.filter_by(id="Fernando").first()
-            our_user.mail_validation = True
-            db.session.commit()
-
-            client.post('/login', data=dict(username="Fernando", password='Fernando'), follow_redirects=False)
-
-            response1 = client.get('/inside', follow_redirects=True)
-            response2 = client.get('/logout', follow_redirects=True)
-            response3 = client.get('/ver', follow_redirects=True)
-
-            assert response1.status_code == 200
-            assert response2.status_code == 200
-            assert response3.status_code == 411
-
-
-    def test_no_login_error(self):
-        with app.test_client() as client:
-            response1 = client.get('/inside', follow_redirects=True)
-            response2 = client.get('/logout', follow_redirects=True)
-            response3 = client.get('/ver', follow_redirects=True)
-            assert response1.status_code == 411
-            assert response2.status_code == 411
-            assert response3.status_code == 411
-
-
-
-    def test_login_logout(self):
-        with app.test_client() as client:
-            username, password = create_one_user(client)
-            data = dict(username=username, password=password)
-            client.post('/login', data=data, follow_redirects=True)
-
-            response1 = client.get('/logout')
-            response2 = client.get('/logout')
-            assert response1.status_code == 200
-            assert response2.status_code == 411
 
 
     def test_before_request(self):

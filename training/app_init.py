@@ -14,11 +14,12 @@ app.task_queue = rq.Queue('my-app-tasks', connection=app.redis)
 def init_db():
     db.create_all()
     db.session.commit()
-
+print("Si señor")
 
 def main():
     init_db()
     app.run(port=8000)
+    print(45555)
 
 
 if __name__ == '__main__':

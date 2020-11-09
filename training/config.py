@@ -20,6 +20,7 @@ class TestConfig(BaseConfig):
     WTF_CSRF_ENABLED = False
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL_FOR_TEST']
     PRESERVE_CONTEXT_ON_EXCEPTION = False
+    MAIL_SUPPRESS_SEND = True
 
 
 class DevelopmentConfig(BaseConfig):

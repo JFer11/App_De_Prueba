@@ -30,8 +30,6 @@ def login_required(function):
         username = sesion.get('username')
         if username is None:
             return render_template("no_login.html"), 411
-            # Redirigir a un HTML de error y algo que trabaje el error, capaz en el header. QUe se puede hacer cuando no
-            # esta logeado?
         return function(*args, **kwargs)
     return wrap
 
@@ -100,9 +98,9 @@ def sign_in():
 @login_required
 def inside():
     if 'username' in sesion:
-        return "Ya estas registrado como --> " + str(sesion['username'])
+        return "Ya estas registrado como --> " + str(sesion['username']), 200
 
-    return "No estas registrado"
+    return "No estas registrado", 400
 
 
 @app.route('/logout')
@@ -111,8 +109,8 @@ def logout():
     if 'username' in sesion:
         a = sesion['username']
         sesion.pop('username', None)
-        return "Se deslogueo la sesion. --> " + str(a)
-    return "No habia sesiones iniciadas"
+        return "Se deslogueo la sesion. --> " + str(a), 200
+    return "No habia sesiones iniciadas", 400
 
 
 @app.route('/ver')
@@ -154,7 +152,7 @@ def send_email():
         email_sender = request.form['email_sender']
         email_recipient = request.form['email_recipient']
         message_body = request.form['message_body']
-        msg = Message('Mail de prueba', sender=email_sender, recipients=[email_recipient])
+        msg = Message('Recover your account', sender=email_sender, recipients=[email_recipient])
         msg.body = message_body
         if 'send_now' in request.form:
             mail.send(msg)
