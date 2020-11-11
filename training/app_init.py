@@ -2,7 +2,7 @@ import os
 from redis import Redis
 import rq
 
-from training.app import app, db
+from training.app import app, db, mail
 import training.controllers
 
 
@@ -14,14 +14,11 @@ app.task_queue = rq.Queue('my-app-tasks', connection=app.redis)
 def init_db():
     db.create_all()
     db.session.commit()
-print("Si señor")
 
 def main():
     init_db()
     app.run(port=8000)
-    print(45555)
 
 
 if __name__ == '__main__':
     main()
-

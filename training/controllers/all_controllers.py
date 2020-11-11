@@ -137,6 +137,7 @@ def email_verification(username):
     else:
         if our_user.mail_validation:
             return "El email de {} ya estaba validado".format(our_user.username), 205
+            # .format(our_user.username), 205
         else:
             #No me gusta esta manera de updatear
             our_user.mail_validation = True
@@ -165,6 +166,7 @@ def send_email():
 
 def send_email_function(msg):
     with app.app_context():
+        mail.suppress = True
         mail.send(msg)
 
 

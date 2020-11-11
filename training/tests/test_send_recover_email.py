@@ -16,9 +16,10 @@ class BasicTests(unittest.TestCase):
         self.app = app.test_client()
         db.create_all()
         db.session.commit()
+        mail.suppress = True
         #print(app.config)
-        print(mail.app.config)
-        print(mail)
+        #print(mail.app.config)
+        #print(mail)
 
         # Disable sending emails during unit testing
         self.assertEqual(app.debug, True)
@@ -52,6 +53,21 @@ class BasicTests(unittest.TestCase):
 
                 self.assertEqual(1, len(outbox))
                 self.assertEqual("Recover your account", outbox[0].subject)
+
+    def test_carajo(self):
+        mail.app.config['TESTING'] = True
+        with app.test_client() as client:
+            print(app.config['TESTING'])
+            print(app.testing)
+            print(mail.suppress)
+            self.assertEqual(200, client.post('/send/email', data=dict(email_sender="sender@g.com",
+                                                                       email_recipient="recipient@g.com",
+                                                                       message_body="JHGFsdf This is a message body!",
+                                                                       send_now=True)).status_code)
+            self.assertEqual(200, client.post('/send/email', data=dict(email_sender="sender@g.com",
+                                                                       email_recipient="recipient@g.com",
+                                                                       message_body="JHGFsdf This is a message body!",
+                                                                        )).status_code)
 
     """
     def test_send_email_async(self):
