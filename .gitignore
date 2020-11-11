@@ -1,5 +1,3 @@
 *.pyc
 .env
 .idea
-app_init_backUp.py
-database_config.py

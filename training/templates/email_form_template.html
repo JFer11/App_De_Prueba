@@ -5,21 +5,19 @@
     <title>Send Email Page</title>
 </head>
 <body>
-    {% from "macro_Form_Index.html" import render_field %}
-
+	{% from "macro_Form_Index.html" import render_field %}
 	<form method=post>
 		<dl>
-	    {{ render_field(form.email_sender) }}
-	    {{ render_field(form.email_recipient) }}
-        {{ render_field(form.message_body) }}
-        {{ render_field(form.send_now) }}
-	    <input type="submit" name="boton">
-  		</dl>
-
+			{{ render_field(form.email_sender) }}
+			{{ render_field(form.email_recipient) }}
+			{{ render_field(form.message_body) }}
+			{{ render_field(form.send_now) }}
+			<input type="submit" name="boton">
+		</dl>
+		
 		{%if sended %}
-		<p>Email enviado!</p>
+			<p>Email enviado!</p>
 		{%endif%}
 	</form>
-
 </body>
 </html>

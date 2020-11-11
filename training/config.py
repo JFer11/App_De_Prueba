@@ -4,8 +4,6 @@ import os
 # default config
 class BaseConfig(object):
     DEBUG = False
-    # shortened for readability
-    #SECRET_KEY = '\xbf\xb0\x11\xb1\xcd\xf9\xba\x8bp\x0c...'
     MAIL_PORT = os.environ.get("MAIL_PORT")
     MAIL_USE_SSL = False
     MAIL_USE_TLS = False
