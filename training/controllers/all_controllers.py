@@ -1,26 +1,26 @@
-from training.app_init import app
-from flask import render_template
-from flask import request
-from training.controllers import index_form, login_form, recover_form, new_password_form
-from flask import redirect, url_for
-from training.main import session
+from flask import render_template, make_response, request, redirect, url_for, g
 from flask import session as sesion
-from training.models.users import User
-from training.app_init import bcrypt
-from markupsafe import escape
-from flask import g
+from flask_mail import Message
 from functools import wraps
-from training.app_init import mail, Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
+
+from training.app import app, db, mail, bcrypt
+from training.controllers import index_form, login_form, recover_form, new_password_form, send_email_form
+from training.controllers.admin import admin_web
+from training.background_tasks.tasks import send_email_async
+from training.models.users import User
+
+
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 s = URLSafeTimedSerializer(app.secret_key)
+
 
 @app.before_request
 def user_to_g():
     username = sesion.get('username')
     if username is not None:
         # Suponemos que el usuario si tiene la session, siempre va a estar en la base de datos
-        user = session.query(User).filter_by(id=username).first()
+        user = db.session.query(User).filter_by(id=username).first()
         g.user = user
     return None
 
@@ -37,9 +37,10 @@ def login_required(function):
         return function(*args, **kwargs)
     return wrap
 
+
 @app.route('/')
 def primera():
-    return "HOLAAAA"
+    return make_response("HOLAAAAAA")
 
 
 @app.route('/index', methods=['GET', 'POST'])
@@ -52,13 +53,13 @@ def signup():
             id = request.form['username']
             username = request.form['username']
             password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
-            #.decode('utf-8') Esto es muy raro, lo vi en un comentario de una respuesta de stack overflow
+            # .decode('utf-8') Esto es muy raro, lo vi en un comentario de una respuesta de stack overflow
             # me parece que es porque en versiones anteoriores de bcrypt no hay
             email = request.form['email']
             user = User(id=id, username=username, email=email, password=password)
 
-            session.add(user)
-            session.commit()
+            db.session.add(user)
+            db.session.commit()
 
             # Redireccionar a otro HTML que entre a la pagina
             return redirect(url_for('sign_in'))
@@ -74,7 +75,7 @@ def sign_in():
     form = login_form.LoginWTForm(request.form)
 
     if request.method == 'POST' and form.validate():
-        our_user = session.query(User).filter_by(id=request.form['username']).first()
+        our_user = User.query.filter_by(id=request.form['username']).first()
 
         if our_user is not None:
             # Si lo encontre en la base, me meto aca
@@ -132,7 +133,7 @@ def prueba_mail():
 
 @app.route('/mail/validation/<string:username>')
 def email_verification(username):
-    our_user = session.query(User).filter_by(id=username).first()
+    our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:
         return "No existe ese usuario"
@@ -142,16 +143,38 @@ def email_verification(username):
         else:
             #No me gusta esta manera de updatear
             our_user.mail_validation = True
-            session.commit()
+            db.session.commit()
             return "Se valido el email de {}".format(our_user.username)
 
 
+@app.route('/send/email', methods=['GET', 'POST'])
+def send_email():
+    form = send_email_form.SendEmailForm(request.form)
+
+    if request.method == 'POST':
+        email_sender = request.form['email_sender']
+        email_recipient = request.form['email_recipient']
+        message_body = request.form['message_body']
+        message_body = request.form['message_body']
+        msg = Message('Mail de prueba', sender=email_sender, recipients=[email_recipient])
+        msg.body = message_body
+        if 'send_now' in request.form:
+            mail.send(msg)
+            return render_template('email_form_template.html', form=form, sended=True)
+        else:
+
+            send_email_async(msg)
+            return render_template('email_form_template.html', form=form, sended=True)
+    return render_template('email_form_template.html', form=form)
+
+  
 @app.route('/recover', methods=['GET', 'POST'])
 def recover_account():
     form = recover_form.RecoverForm()
 
     if request.method == 'POST':
-        our_user = session.query(User).filter_by(email=request.form['email']).first()
+        our_user = User.query.filter_by(email=request.form['email']).first()
+        #our_user = session.query(User).filter_by(email=request.form['email']).first()
         if our_user is not None:
             send_token_to_email(request.form['email'])
             return render_template('recover.html', form=form, accepted_request=True)
@@ -179,9 +202,10 @@ def validate_token(token):
     form = new_password_form.NewPasswordForm(request.form)
 
     if request.method == 'POST' and form.validate():
-        our_user = session.query(User).filter_by(email=email).first()
+        #our_user = session.query(User).filter_by(email=email).first()
+        our_user = User.query.filter_by(email=email).first()
         password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
         our_user.password = password
-        session.commit()
+        db.session.commit()
         return redirect(url_for('sign_in'))
     return render_template('new_password.html', form=form)
