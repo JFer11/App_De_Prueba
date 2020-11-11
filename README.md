@@ -13,3 +13,5 @@
  ```$ rq worker my-app-tasks```
  Remember that "my-app-tasks" is the name for the redis server that the worker will be connected.
     
+ To access postgres database:
+ ```sudo -u postgres psql```

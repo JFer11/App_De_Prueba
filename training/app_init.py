@@ -2,7 +2,7 @@ import os
 from redis import Redis
 import rq
 
-from training.app import app, db
+from training.app import app, db, mail
 import training.controllers
 
 
@@ -15,7 +15,6 @@ def init_db():
     db.create_all()
     db.session.commit()
 
-
 def main():
     init_db()
     app.run(port=8000)
@@ -23,4 +22,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

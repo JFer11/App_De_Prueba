@@ -22,6 +22,8 @@ def user_to_g():
         # Suponemos que el usuario si tiene la session, siempre va a estar en la base de datos
         user = db.session.query(User).filter_by(id=username).first()
         g.user = user
+    else:
+        g.user = None
     return None
 
 
@@ -31,16 +33,15 @@ def login_required(function):
     def wrap(*args, **kwargs):
         username = sesion.get('username')
         if username is None:
-            return "Error, must be logged in"
-            # Redirigir a un HTML de error y algo que trabaje el error, capaz en el header. QUe se puede hacer cuando no
-            # esta logeado?
+            return render_template("no_login.html"), 411
         return function(*args, **kwargs)
     return wrap
 
 
 @app.route('/')
 def primera():
-    return make_response("HOLAAAAAA")
+    return render_template("nothing.html"), 200
+
 
 
 @app.route('/index', methods=['GET', 'POST'])
@@ -62,12 +63,12 @@ def signup():
             db.session.commit()
 
             # Redireccionar a otro HTML que entre a la pagina
-            return redirect(url_for('sign_in'))
+            return redirect(url_for('sign_in')), 201
         else:
             form = index_form.RegistrationForm(request.form)
-            return render_template('index.html', form=form, alert=True)
+            return render_template('index.html', form=form, alert=True), 400
 
-    return render_template('index.html', form=form, alert=False)
+    return render_template('index.html', form=form, alert=False), 200
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -83,27 +84,27 @@ def sign_in():
             if bcrypt.check_password_hash(our_user.password, request.form['password']) and our_user.mail_validation:
                 # Se le da la cookie session
                 sesion['username'] = request.form['username']
-                return redirect(url_for('inside'))
+                return redirect(url_for('inside')), 200
 
             if not our_user.mail_validation:
-                return render_template('login.html', form=form, alert_mail=True)
+                return render_template('login.html', form=form, alert_mail=True), 451
 
             #Solo pasa si la contraseña esta mal
-            return render_template('login.html', form=form, alert=True)
+            return render_template('login.html', form=form, alert=True), 452
 
         else:
-            return render_template('login.html', form=form, alert=True)
+            return render_template('login.html', form=form, alert=True), 450
 
-    return render_template('login.html', form=form)
+    return render_template('login.html', form=form), 800
 
 
 @app.route('/inside')
 @login_required
 def inside():
     if 'username' in sesion:
-        return "Ya estas registrado como --> " + str(sesion['username'])
+        return "Ya estas registrado como --> " + str(sesion['username']), 200
 
-    return "No estas registrado"
+    return "No estas registrado", 400
 
 
 @app.route('/logout')
@@ -112,8 +113,8 @@ def logout():
     if 'username' in sesion:
         a = sesion['username']
         sesion.pop('username', None)
-        return "Se deslogueo la sesion. --> " + str(a)
-    return "No habia sesiones iniciadas"
+        return "Se deslogueo la sesion. --> " + str(a), 200
+    return "No habia sesiones iniciadas", 400
 
 
 @app.route('/ver')
@@ -128,7 +129,7 @@ def prueba_mail():
     msg = Message('Confirm Email', sender='anthony@prettyprinted.com', recipients=[email])
     msg.body = "Bienvenido"
     mail.send(msg)
-    return "0"
+    return "0", 200
 
 
 @app.route('/mail/validation/<string:username>')
@@ -136,15 +137,16 @@ def email_verification(username):
     our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:
-        return "No existe ese usuario"
+        return "No existe ese usuario", 450
     else:
         if our_user.mail_validation:
-            return "El email de {} ya estaba validado".format(our_user.username)
+            return "El email de {} ya estaba validado".format(our_user.username), 205
+            # .format(our_user.username), 205
         else:
             #No me gusta esta manera de updatear
             our_user.mail_validation = True
             db.session.commit()
-            return "Se valido el email de {}".format(our_user.username)
+            return "Se valido el email de {}".format(our_user.username), 200
 
 
 @app.route('/send/email', methods=['GET', 'POST'])
@@ -155,8 +157,8 @@ def send_email():
         email_sender = request.form['email_sender']
         email_recipient = request.form['email_recipient']
         message_body = request.form['message_body']
-        message_body = request.form['message_body']
-        msg = Message('Mail de prueba', sender=email_sender, recipients=[email_recipient])
+        msg = Message('Recover your account', sender=email_sender, recipients=[email_recipient])
+
         msg.body = message_body
         if 'send_now' in request.form:
             mail.send(msg)
@@ -171,7 +173,7 @@ def send_email():
 @app.route('/recover', methods=['GET', 'POST'])
 def recover_account():
     form = recover_form.RecoverForm()
-
+    
     if request.method == 'POST':
         our_user = User.query.filter_by(email=request.form['email']).first()
         #our_user = session.query(User).filter_by(email=request.form['email']).first()
@@ -182,6 +184,26 @@ def recover_account():
             return render_template('recover.html', form=form, accepted_request=True)
 
     return render_template('recover.html', form=form)
+
+ 
+def send_email_function(msg):
+    with app.app_context():
+        mail.suppress = True
+        mail.send(msg)
+
+
+def send_email_async(msg, form):
+    job = app.task_queue.enqueue(send_email_function, msg)
+    job.get_id()
+    return render_template('email_form_template.html', form=form, sended=True)
+
+
+@app.route('/g')
+def test_g():
+    if g.user is None:
+        return "No  hay usuario logueado", 411
+    else:
+        return str(g.user), 200
 
 
 def send_token_to_email(email):
