@@ -27,9 +27,9 @@ from training.extensions import db
 """
 
 
-s = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
+serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
 
-bp = Blueprint('name3', __name__)
+bp = Blueprint('mail', __name__)
 
 #from training.background_tasks.tasks import send_email_async, send_email_function
 from training.app import app
@@ -94,9 +94,9 @@ def send_email():
 
 
 def send_token_to_email(email):
-    token = s.dumps(email, salt='recover-email')
+    token = serializer.dumps(email, salt='recover-email')
     msg = Message('Recover Email', sender='no_reply@system.com', recipients=[email])
-    link = url_for('validate_token', token=token, _external=True)
+    link = url_for('mail.validate_token', token=token, _external=True)
     msg.body = f"Haga click aqui para recuperar su cuenta: {link} "
     mail.send(msg)
 
@@ -119,7 +119,7 @@ def recover_account():
 @bp.route('/recover/validate/<token>', methods=['GET', 'POST'])
 def validate_token(token):
     try:
-        email = s.loads(token, salt='recover-email', max_age=600)
+        email = serializer.loads(token, salt='recover-email', max_age=600)
     except SignatureExpired:
         return "The token expired!"
 
@@ -130,5 +130,5 @@ def validate_token(token):
         password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
         our_user.password = password
         db.session.commit()
-        return redirect(url_for('sign_in'))
+        return redirect(url_for('auth.sign_in'))
     return render_template('new_password.html', form=form)

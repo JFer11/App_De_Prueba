@@ -7,16 +7,13 @@ from training.controllers.function_decorators import login_required
 #Hay que ver donde carajo poner esto--------------------------------------------------------------------------------------
 
 
-bp = Blueprint('name2', __name__)
+bp = Blueprint('basic', __name__)
 
 
 @bp.route('/inside')
 @login_required
 def inside():
-    if 'username' in session:
-        return "You are already logged as --> " + str(session['username']), 200
-
-    return "You are not logged in", 400
+    return "You are already logged as --> " + str(session['username']), 200
 
 
 @bp.route('/ver')

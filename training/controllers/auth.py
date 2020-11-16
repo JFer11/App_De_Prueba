@@ -9,7 +9,7 @@ from training.controllers.forms import index_form, login_form
 from training.controllers.function_decorators import login_required
 
 
-bp = Blueprint('name1', __name__)
+bp = Blueprint('auth', __name__)
 
 
 @bp.before_app_request
@@ -48,7 +48,7 @@ def signup():
                 db.session.add(user)
                 db.session.commit()
 
-                return redirect(url_for('sign_in')), 201
+                return redirect(url_for('auth.sign_in')), 201
             else:
                 return render_template('bad_form.html'), 420
         else:
@@ -70,7 +70,7 @@ def sign_in():
                 if bcrypt.check_password_hash(our_user.password, request.form['password']):
                     # Se le da la cookie session
                     session['username'] = request.form['username']
-                    return redirect(url_for('name2.inside')), 200
+                    return redirect(url_for('basic.inside')), 200
                 else:
                     # Bad password
                     return render_template('login.html', form=form, alert=True), 452
