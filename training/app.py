@@ -35,6 +35,7 @@ def create_app():
     def first_page():
         return render_template("nothing.html"), 200
 
+    # Blueprints
     from training.controllers.auth import bp
     from training.controllers.basic_funcionalities import bp as bp2
     from training.controllers.mail import bp as bp3
@@ -42,24 +43,20 @@ def create_app():
     app.register_blueprint(bp2)
     app.register_blueprint(bp3)
 
+    # Admin
+    from flask_admin import Admin
+    admin = Admin(app, name='Users admin', template_mode='bootstrap3')
+    from training.controllers.admin.admin_web import UserModelView
+    from training.models.users import User
+    admin.add_view(UserModelView(User, db.session))
+
     with app.app_context():
         db.create_all()
         db.session.commit()
 
-    print("SABEEE")
+    print("Bien!")
 
     return app
 
 
 app = create_app()
-
-"""
-def modifications_app():
-    global app
-    from training.controllers.mail import bp as bp3
-    app.register_blueprint(bp3)
-
-    return app
-
-modifications_app()
-"""

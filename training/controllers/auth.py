@@ -1,9 +1,6 @@
 from flask import Blueprint, request, redirect, render_template, url_for, g, session
 
 from training.extensions import db, bcrypt
-# Duda, porque no funciona?
-# with current_app.app_context():
-#    db = current_app.db
 from training.models.users import User
 from training.controllers.forms import index_form, login_form
 from training.controllers.function_decorators import login_required

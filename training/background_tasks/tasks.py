@@ -1,7 +1,7 @@
 import time
 from rq import get_current_job
 from training.app import app
-#from training.extensions import mail
+from training.extensions import mail
 
 
 def example(seconds):
@@ -17,12 +17,7 @@ def example(seconds):
     print('Task completed')
 
 
-def send_email_function(msg, mail):
+def send_email_function(msg):
     with app.app_context():
         # mail.suppress = True
         mail.send(msg)
-
-
-def send_email_async(msg):
-    job = app.task_queue.enqueue(send_email_function, msg)
-    job.get_id()

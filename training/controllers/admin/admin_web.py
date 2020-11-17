@@ -1,9 +1,6 @@
-from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from training.models.users import User
-from training.app import db, app, bcrypt
-
-admin = Admin(app, name='Users admin', template_mode='bootstrap3')
+from training.extensions import bcrypt
 
 
 class UserModelView(ModelView):
@@ -12,6 +9,3 @@ class UserModelView(ModelView):
 
     def on_model_change(self, form, User, is_created=False):
         User.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-
-
-admin.add_view(UserModelView(User, db.session))

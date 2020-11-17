@@ -8,32 +8,10 @@ from training.extensions import mail, bcrypt
 from training.models.users import User
 from training.extensions import db
 
-""" 
-    Problema original, solucionado. Sin embargo, estaria bueno discutir la solucion. Se relaciona con las background tasks para enviar mails por redis, ya que como 
-    me habias dicho Joaco, tenia que buscar una amanera de pasarle el app_context a redis. 
-
-    Mi problema original era el siguiente:
-    Este modulo es llamado cuando se esta a la mitad e create_app.
-    Recordemos que app, es creado como variable global al final de correrse create_app y aqui estamos en la mitad del flujo.
-    Por lo que cuando importamos "from training.background_tasks.tasks import send_email_async" este importa app desde app.py, pero aun no esta creada ya que
-    nos encontrabamos a mitad del flujo de create_app, y recordemos que app se crea cuando termina create_app. Ergo, ERROR
-    
-    Solucion:
-    Crear la app en 2 pasos. Se hace app=create_app(), y en create_app se inicializa, importa y crea todo salvo este modulo.
-    Luego, se llama a una funcion modifications(), que importa solo este modulo y se agrega el blueprint a la app ya existente.
-    
-    Entonces al importarse este modulo, se comienza a correr, y en determinado momento se importa app desde aca. 
-    Pero ya existe una app, por lo que no hay problema en ir a buscarla a app.py. Y se le puede dar el app_context a redis.
-"""
-
 
 serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
 
 bp = Blueprint('mail', __name__)
-
-#from training.background_tasks.tasks import send_email_async, send_email_function
-#from training.app import app
-
 
 
 # Test mail
@@ -61,17 +39,6 @@ def email_verification(username):
             db.session.commit()
             return "Email from user {} was successfully validated.".format(our_user.username), 200
 
-"""# Recover password process
-def send_email_function(msg):
-    with app.app_context():
-        # mail.suppress = True
-        mail.send(msg)
-
-
-def send_email_async(msg):
-    job = app.task_queue.enqueue(send_email_function, msg)
-    job.get_id()
-"""
 
 @bp.route('/send/email', methods=['GET', 'POST'])           #
 def send_email():
@@ -88,23 +55,9 @@ def send_email():
             mail.send(msg)
             return render_template('email_form_template.html', form=form, sended=True)
         else:
-            # send_email_async(msg)
-            """@copy_current_request_context esto podria usarlo, pero dsp tengo que pasarle la funcion a redis, y redis utiliza app y no la puedo importar"""
-
-            #w@copy_current_request_context
-            #def enviar_correos_async(mail, msg):
-            #    mail.send(msg)
-
-            #current_app.task_queue = rq.Queue('microblog-tasks', connection=Redis.from_url('redis://'))
-            print(current_app)
-            print(current_app.task_queue)
-            print(current_app.task_queue.enqueue)
-            job = current_app.task_queue.enqueue('training.background_tasks.tasks.send_email_function', mail, msg)
-
-            print("-----------------------------------***************---------------------")
-            print(job)
-            print("-----------------------------------***************---------------------")
+            current_app.task_queue.enqueue('training.background_tasks.tasks.send_email_function', msg)
             return render_template('email_form_template.html', form=form, sended=True)
+
     return render_template('email_form_template.html', form=form)
 
 
@@ -147,4 +100,3 @@ def validate_token(token):
         db.session.commit()
         return redirect(url_for('auth.sign_in'))
     return render_template('new_password.html', form=form)
-

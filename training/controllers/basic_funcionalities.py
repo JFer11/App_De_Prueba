@@ -2,11 +2,6 @@ from flask import Blueprint, session, g
 
 from training.controllers.function_decorators import login_required
 
-#Hay que ver donde carajo poner esto--------------------------------------------------------------------------------------
-# from training.controllers.admin import admin_web
-#Hay que ver donde carajo poner esto--------------------------------------------------------------------------------------
-
-
 bp = Blueprint('basic', __name__)
 
 
