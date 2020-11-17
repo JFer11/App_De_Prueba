@@ -37,8 +37,10 @@ def create_app():
 
     from training.controllers.auth import bp
     from training.controllers.basic_funcionalities import bp as bp2
+    from training.controllers.mail import bp as bp3
     app.register_blueprint(bp)
     app.register_blueprint(bp2)
+    app.register_blueprint(bp3)
 
     with app.app_context():
         db.create_all()
@@ -51,7 +53,7 @@ def create_app():
 
 app = create_app()
 
-
+"""
 def modifications_app():
     global app
     from training.controllers.mail import bp as bp3
@@ -59,5 +61,5 @@ def modifications_app():
 
     return app
 
-
 modifications_app()
+"""

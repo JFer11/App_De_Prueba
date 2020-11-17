@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, url_for, redirect
+from flask import Blueprint, request, render_template, url_for, redirect, current_app, copy_current_request_context
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 import os
@@ -32,7 +32,8 @@ serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
 bp = Blueprint('mail', __name__)
 
 #from training.background_tasks.tasks import send_email_async, send_email_function
-from training.app import app
+#from training.app import app
+
 
 
 # Test mail
@@ -60,8 +61,7 @@ def email_verification(username):
             db.session.commit()
             return "Email from user {} was successfully validated.".format(our_user.username), 200
 
-
-# Recover password process
+"""# Recover password process
 def send_email_function(msg):
     with app.app_context():
         # mail.suppress = True
@@ -71,9 +71,9 @@ def send_email_function(msg):
 def send_email_async(msg):
     job = app.task_queue.enqueue(send_email_function, msg)
     job.get_id()
+"""
 
-
-@bp.route('/send/email', methods=['GET', 'POST'])
+@bp.route('/send/email', methods=['GET', 'POST'])           #
 def send_email():
     form = send_email_form.SendEmailForm(request.form)
 
@@ -88,7 +88,22 @@ def send_email():
             mail.send(msg)
             return render_template('email_form_template.html', form=form, sended=True)
         else:
-            send_email_async(msg)
+            # send_email_async(msg)
+            """@copy_current_request_context esto podria usarlo, pero dsp tengo que pasarle la funcion a redis, y redis utiliza app y no la puedo importar"""
+
+            #w@copy_current_request_context
+            #def enviar_correos_async(mail, msg):
+            #    mail.send(msg)
+
+            #current_app.task_queue = rq.Queue('microblog-tasks', connection=Redis.from_url('redis://'))
+            print(current_app)
+            print(current_app.task_queue)
+            print(current_app.task_queue.enqueue)
+            job = current_app.task_queue.enqueue('training.background_tasks.tasks.send_email_function', mail, msg)
+
+            print("-----------------------------------***************---------------------")
+            print(job)
+            print("-----------------------------------***************---------------------")
             return render_template('email_form_template.html', form=form, sended=True)
     return render_template('email_form_template.html', form=form)
 
@@ -132,3 +147,4 @@ def validate_token(token):
         db.session.commit()
         return redirect(url_for('auth.sign_in'))
     return render_template('new_password.html', form=form)
+
