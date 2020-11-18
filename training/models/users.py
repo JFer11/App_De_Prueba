@@ -1,5 +1,5 @@
 from datetime import datetime
-from training.app import db
+from training.extensions import db
 
 
 class User(db.Model):
