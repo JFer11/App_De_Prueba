@@ -74,9 +74,7 @@ class BasicTests(unittest.TestCase):
             self.assertEqual(205, client.get(f'/mail/validation/{username}').status_code)
 
             # We log the user who just validated his email
-            # PREGUNTAAAAA ACA NO VA EL FOLLOWS REDIRECT?
-            print("Tengo una duda en este test")
-            self.assertEqual(200, client.post('/login', data=dict(username=username, password=password)).status_code)
+            self.assertEqual(200, client.post('/login', data=dict(username=username, password=password), follow_redirects=True).status_code)
 
             # We check if out user logged in correctly
             with client.session_transaction() as sess:
