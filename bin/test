@@ -1,3 +1,3 @@
 #!/bin/bash
 
-FLASK_ENV=test python -m unitest $*
+FLASK_ENV=testing python -m unittest $*

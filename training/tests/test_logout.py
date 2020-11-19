@@ -1,27 +1,35 @@
 import unittest
 
-from training.app_init import app, db
-from training.models.users import User
-from training.utils.test_funcions import create_one_user, login_one_user, logout
+from training.app import app
+from training.extensions import db
+from training.utils.test_funcions import create_one_user, login_one_user
 
 
 class BasicTests(unittest.TestCase):
 
     # executed prior to each test
     def setUp(self):
-        app.config.from_object('training.config.TestConfig')
-        app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+        # We run this test with the following command:
+        # FLASK_ENV=testing python -m unittest training/tests/test_logout.py
+        # So then, FLASK_ENV=testing, and when we import our app,
+        # app.config will be configured as app.config.from_object('training.config.TestConfig')
+
+        # If you ran tests with de IDE, is probably that app.config was not configured properly, so perhaps
+        # some test will not assert
+
         self.app = app.test_client()
-        db.create_all()
-        db.session.commit()
+        with app.app_context():
+            db.create_all()
+            db.session.commit()
 
         # Disable sending emails during unit testing
         self.assertEqual(app.debug, True)
 
     # executed after each test
     def tearDown(self):
-        db.drop_all()
-        db.session.commit()
+        with app.app_context():
+            db.drop_all()
+            db.session.commit()
 
     # Tests inside
     def test_login_then_logout(self):
@@ -61,7 +69,3 @@ class BasicTests(unittest.TestCase):
 
             # Decorator login_required catch the function and return 'no_login.html', 411
             self.assertEqual(411, client.get('/logout').status_code)
-
-
-if __name__ == "__main__":
-    unittest.main()

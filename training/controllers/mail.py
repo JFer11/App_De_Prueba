@@ -53,12 +53,12 @@ def send_email():
         msg.body = message_body
         if 'send_now' in request.form:
             mail.send(msg)
-            return render_template('email_form_template.html', form=form, sended=True)
+            return render_template('email_form_template.html', form=form, sended=True), 204
         else:
             current_app.task_queue.enqueue('training.background_tasks.tasks.send_email_function', msg)
-            return render_template('email_form_template.html', form=form, sended=True)
+            return render_template('email_form_template.html', form=form, sended=True), 205
 
-    return render_template('email_form_template.html', form=form)
+    return render_template('email_form_template.html', form=form), 200
 
 
 def send_token_to_email(email):

@@ -20,6 +20,6 @@ def ver():
 @bp.route('/g')
 def test_g():
     if g.user is None:
-        return "No  hay usuario logueado", 411
+        return "No user logged", 411
     else:
         return str(g.user), 200

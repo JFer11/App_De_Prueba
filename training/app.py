@@ -9,11 +9,16 @@ load_dotenv()
 def create_app():
     app = Flask(__name__)
 
-    # environment can only take these values: "DevelopmentConfig", "ProductionConfig", "TestConfig"
-    # environment = os.environ.get('FLASK_ENV_TYPE', 'DevelopmentConfig')
-    # app.config.from_object('training.config.' + str(environment))
-    # remember that in .env it is FLASK_ENV=development
-    app.config.from_object('training.config.DevelopmentConfig')
+    # Remember, FLASK_ENV=development is set in .env
+    if os.environ.get('FLASK_ENV') == 'development':
+        app.config.from_object('training.config.DevelopmentConfig')
+    elif os.environ.get('FLASK_ENV') == 'testing':
+        app.config.from_object('training.config.TestConfig')
+    elif os.environ.get('FLASK_ENV') == 'production':
+        app.config.from_object('training.config.ProductionConfig')
+    else:
+        app.config.from_object('training.config.DevelopmentConfig')
+
     app.secret_key = os.environ.get('SECRET_KEY')
 
     from training.extensions import db
