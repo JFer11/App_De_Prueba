@@ -59,6 +59,9 @@ def create_app():
         db.create_all()
         db.session.commit()
 
+    from training.controllers.api import bp as bp4
+    app.register_blueprint(bp4)
+
     print("Bien!")
 
     return app
