@@ -59,8 +59,6 @@ def create_app():
         db.create_all()
         db.session.commit()
 
-    print("Bien!")
-
     return app
 
 
