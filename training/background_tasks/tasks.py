@@ -19,5 +19,4 @@ def example(seconds):
 
 def send_email_function(msg):
     with app.app_context():
-        # mail.suppress = True
         mail.send(msg)
