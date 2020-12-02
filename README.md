@@ -39,6 +39,8 @@
     Or to run all tests: ```./bin/test```
     
  
+ IMPORTANT: First option run 46 tests and one fails, and Second Option run 45 successfully
+ 
  To run app, before:
  export FLASK_APP=training.app
 

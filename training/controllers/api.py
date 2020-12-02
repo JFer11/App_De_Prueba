@@ -1,10 +1,9 @@
 import json
 import os
-from flask import Blueprint, jsonify, abort, make_response, request, session
-from itsdangerous import URLSafeTimedSerializer
+from flask import Blueprint, jsonify, abort, make_response, request, session, g
+from itsdangerous import URLSafeTimedSerializer, BadSignature
 
 from training.controllers.function_decorators import login_required
-from training.utils.common_functions import how_is_logged
 from training.extensions import bcrypt, db
 from training.models.users import User
 
@@ -12,82 +11,10 @@ bp = Blueprint('api', __name__, url_prefix='/api')
 
 serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
 
-tasks = [
-    {
-        'id': 1,
-        'title': u'Buy groceries',
-        'description': u'Milk, Cheese, Pizza, Fruit, Tylenol',
-        'done': False
-    },
-    {
-        'id': 2,
-        'title': u'Learn Python',
-        'description': u'Need to find a good Python tutorial on the web',
-        'done': False
-    },
-    {
-        'id': 3,
-        'title': u'Learn Python',
-        'description': u'Need to find a good Python tutorial on the web',
-        'done': True
-    }
-]
 
-
-@bp.route('/example')
-def example():
-    return jsonify({'tasks': tasks})
-
-
-@bp.route('/example/<int:task_id>', methods=['GET'])
-def get_task(task_id):
-    task = [task for task in tasks if task['id'] == task_id]
-    if len(task) == 0:
-        # 404 means resource not found, exactly what happens here
-        abort(404)
-    return jsonify({'task': task[0]})
-
-
-"""
-To avoid this response when a 404 error was generated:
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<title>404 Not Found</title>
-<h1>Not Found</h1>
-<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
- 
- We craft the function below.
-"""
-
-
-@bp.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error': 'Not found doggy'}), 404)
-
-
-@bp.route('/example', methods=['POST'])
-def create_task():
-    if not request.json or not 'title' in request.json:
-        print("Mamarracho")
-        abort(400)
-    else:
-        task = {
-            'id': tasks[-1]['id'] + 1,
-            'title': request.json['title'],
-            'description': request.json.get('description', ""),
-            'done': False
-        }
-        tasks.append(task)
-        return jsonify({'task': task}), 201
-
-    session['title'] = request.json['title']
-    return "PEPE", 205
-
-# request.get_json()
-
-
-# True endpoint start here
 def repeated_fields(fields):
-    if User.query.filter_by(id=fields.get('username')).first() is not None or User.query.filter_by(id=fields.get('email')).first() is not None:
+    if User.query.filter_by(id=fields.get('username')).first() is not None or User.query.filter_by(
+            id=fields.get('email')).first() is not None:
         return True
     return False
 
@@ -148,16 +75,16 @@ def verify_email(username):
 
     if our_user is None:
         abort(404)
-
-    if our_user is None:
-        return "User not exist", 450
     else:
         if our_user.mail_validation:
-            return "The email {} was already validated.".format(our_user.username), 205
+            detail = {'detail': "Email was already validated."}
+            return jsonify(detail), 202
         else:
             our_user.mail_validation = True
             db.session.commit()
-            return "Email from user {} was successfully validated.".format(our_user.username), 200
+
+            detail = {'detail': "Email from user was successfully validated."}
+            return jsonify(detail), 200
 
 
 @bp.route('/users/data/<string:username>')
@@ -176,13 +103,13 @@ def return_user_data(username):
         "created_at": our_user.created_at
     }
 
-    return user_json, 211
+    return user_json, 200
 
 
-@login_required
 @bp.route('/users/data')
+@login_required
 def return_logged_users_data():
-    username = how_is_logged()
+    username = g.user.username
     our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:

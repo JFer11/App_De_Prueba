@@ -1,12 +1,11 @@
 from flask import Blueprint, request, redirect, render_template, url_for, g, session
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import URLSafeTimedSerializer, BadSignature
 import os
 
 from training.extensions import db, bcrypt
 from training.models.users import User
 from training.controllers.forms import index_form, login_form
 from training.controllers.function_decorators import login_required
-
 
 bp = Blueprint('auth', __name__)
 
@@ -23,17 +22,26 @@ def user_to_g():
         user = db.session.query(User).filter_by(id=username).first()
         g.user = user
     elif header is not None:
-        username_token = serializer.loads(header, salt='login')
+        try:
+            username_token = serializer.loads(header, salt='login')
+        except BadSignature:
+            username_token = None
 
         user = db.session.query(User).filter_by(id=username_token).first()
-        g.user = user
+
+        # We check if user is None, because we could pass a wrong auth_token through the api
+        if user is not None:
+            g.user = user
+        else:
+            g.user = None
     else:
         g.user = None
     return None
 
 
 def test_unique_fields(form):
-    if User.query.filter_by(id=form['username']).first() or User.query.filter_by(email=form['email']).first() is not None:
+    if User.query.filter_by(id=form['username']).first() or User.query.filter_by(
+            email=form['email']).first() is not None:
         return False
     else:
         return True
@@ -85,7 +93,7 @@ def sign_in():
             else:
                 return render_template('login.html', form=form, alert_mail=True), 451
         else:
-                return render_template('login.html', form=form, alert=True), 450
+            return render_template('login.html', form=form, alert=True), 450
 
     return render_template('login.html', form=form), 800
 

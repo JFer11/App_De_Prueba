@@ -10,6 +10,7 @@ class User(db.Model):
 	email = db.Column(db.String(50), nullable=False, unique=True)
 	mail_validation = db.Column(db.Boolean, unique=False, default=False)
 	created_at = db.Column(db.DateTime(), default=datetime.now())
+	path_to_image = db.Column(db.String(50), unique=True)
 
 	def __str__(self):
 		return self.username

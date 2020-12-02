@@ -1,0 +1,249 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "description": "by Joaquin Fernandez",
+    "version": "1.0.0",
+    "title": "App Flask Training",
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "tags": [
+    {
+      "name": "User",
+      "description": "User's api"
+    }
+  ],
+  "paths": {
+    "/api/register": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Returns username and password",
+        "requestBody": {
+          "description": "Register Request Post Object Body",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/user_main_data"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "schema": {
+              "$ref": "#/components/schemas/user_credentials"
+            }
+          },
+          "400": {
+            "description": "Missing keys (username, email, or password) or the user already exists."
+          }
+        }
+      }
+    },
+    "/api/login": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "If mail is validated, and the user exists and the password is correct. It returns the token to authenticate te user",
+        "requestBody": {
+          "description": "Login Request Post Object Body",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/user_credentials"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Logged successfully",
+            "schema": {
+              "$ref": "#/components/schemas/user_token"
+            }
+          },
+          "400": {
+            "description": "Missing keys (username or password) or the user not exists."
+          },
+          "401": {
+            "description": "User's email not validated."
+          },
+          "450": {
+            "description": "Wrong password."
+          }
+        }
+      }
+    },
+    "/api/verify/email/{username}": {
+      "parameters": [
+        {
+          "name": "username",
+          "in": "path",
+          "required": true,
+          "description": "username of the user we want to validate its email.",
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Validate an email from a user",
+        "responses": {
+          "202": {
+            "description": "The email was already validated",
+            "schema": {
+              "$ref": "#/components/schemas/detail"
+            }
+          },
+          "200": {
+            "description": "Email from user was successfully validated.",
+            "schema": {
+              "$ref": "#/components/schemas/detail"
+            }
+          },
+          "404": {
+            "description": "Failed. User does not exist.",
+            "schema": {
+              "$ref": "#/components/schemas/detail"
+            }
+          }
+        }
+      }
+    },
+    "/api/users/data/{username}": {
+      "parameters": [
+        {
+          "name": "username",
+          "in": "path",
+          "required": true,
+          "description": "username of the user we want to get its data.",
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get the available information about a user",
+        "responses": {
+          "200": {
+            "description": "The information about the user was successfully given.",
+            "schema": {
+              "$ref": "#/components/schemas/user_json"
+            }
+          },
+          "404": {
+            "description": "User not exist."
+          }
+        }
+      }
+    },
+    "/api/users/data": {
+      "parameters": [
+        {
+          "name": "auth_token",
+          "in": "header",
+          "required": true,
+          "description": "Authorization token to sign in the user. You must authenticate to access this endpoint",
+          "type": "string",
+          "format": "token"
+        }
+      ],
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get the available information about the user who is logged",
+        "responses": {
+          "200": {
+            "description": "The information about the user was successfully given.",
+            "schema": {
+              "$ref": "#/components/schemas/user_json"
+            }
+          },
+          "404": {
+            "description": "User not logged."
+          }
+        }
+      }
+    }
+
+  },
+  "components": {
+    "schemas": {
+      "user_main_data": {
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "user_token": {
+        "type": "object",
+        "properties": {
+          "auth_token": {
+            "type": "string",
+            "format": "token"
+          }
+        }
+      },
+      "user_credentials": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string",
+            "format": "token"
+          }
+        }
+      },
+      "detail": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "user_json": {
+        "type":  "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          },
+          "mail_validation": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "date"
+          }
+        }
+      }
+    }
+  }
+}
