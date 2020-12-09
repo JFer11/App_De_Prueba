@@ -1,4 +1,4 @@
-from training.app import bcrypt
+from training.extensions import bcrypt
 
 
 def crypt_password(raw):

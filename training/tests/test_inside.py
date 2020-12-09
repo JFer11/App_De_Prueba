@@ -1,27 +1,24 @@
 import unittest
 
-from training.app_init import app, db
+from training.extensions import db
+from training.app import app
 from training.models.users import User
+from training.tests.super_class import SetUpAndTearDown
 from training.utils.test_funcions import create_one_user, login_one_user, logout
 
 
-class BasicTests(unittest.TestCase):
+class BasicTestsInside(SetUpAndTearDown):
+    """
+    We run this test with the following command:
+    FLASK_ENV=testing python -m unittest training/tests/test_inside.py
+    So then, FLASK_ENV=testing, and when we import our app,
+    app.config will be configured as app.config.from_object('training.config.TestConfig')
 
-    # executed prior to each test
-    def setUp(self):
-        app.config.from_object('training.config.TestConfig')
-        app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-        self.app = app.test_client()
-        db.create_all()
-        db.session.commit()
+    If you ran tests with de IDE, is probably that app.config was not configured properly, so perhaps
+    some test will not assert
+    """
 
-        # Disable sending emails during unit testing
-        self.assertEqual(app.debug, True)
-
-    # executed after each test
-    def tearDown(self):
-        db.drop_all()
-        db.session.commit()
+    # executed prior to each test, setUp and tearDown, inherited from setUpAndTearDown class
 
     # Test imported function
     def test_create_one_user(self):
@@ -80,7 +77,3 @@ class BasicTests(unittest.TestCase):
 
             # The decorator login_required catch the function and return 'no_login.html', 411
             self.assertEqual(411, client.get('/inside').status_code)
-
-
-if __name__ == "__main__":
-    unittest.main()
