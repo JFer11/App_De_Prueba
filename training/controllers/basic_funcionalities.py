@@ -22,8 +22,9 @@ def test_g():
     if g.user is None:
         return "No user logged", 401
     else:
-        user_dict = {}
-        for field in g.user.__dict__:
-            if field != '_sa_instance_state':
-                user_dict[field] = g.user.__dict__[field]
-        return user_dict, 200
+        return "No user logged", 411
+        # user_dict = {}
+        # for field in g.user.__dict__:
+        #     if field != '_sa_instance_state':
+        #         user_dict[field] = g.user.__dict__[field]
+        # return user_dict, 200

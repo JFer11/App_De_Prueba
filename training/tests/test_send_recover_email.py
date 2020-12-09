@@ -5,14 +5,14 @@ from unittest.mock import patch
 from training.app import app
 from training.extensions import mail, db
 from training.models.users import User
-from training.tests.super_class import setUpAndTearDown
+from training.tests.super_class import SetUpAndTearDown
 from training.utils.test_funcions import create_one_user_no_mail_validation
 
 
 # from training.background_tasks.tasks import send_email_function
 
 
-class BasicTestsRecoverEmail(setUpAndTearDown):
+class BasicTestsRecoverEmail(SetUpAndTearDown):
     """
     We run this test with the following command:
     FLASK_ENV=testing python -m unittest training/tests/test_send_recover_email.py
@@ -86,7 +86,7 @@ class BasicTestsRecoverEmail(setUpAndTearDown):
             """
 
             mock.return_value = 40
-            self.assertEqual(205, client.post('/send/email',
+            self.assertEqual(200, client.post('/send/email',
                                               data=dict(email_sender="sender@g.com", email_recipient="recipient@g.com",
                                                         message_body="ASYNC EMAIL, This is a message body!"),
                                               follow_redirects=True).status_code)
@@ -100,7 +100,7 @@ class BasicTestsRecoverEmail(setUpAndTearDown):
                                                                        email_recipient="recipient@g.com",
                                                                        message_body="SYNC MAIL This is a message body!",
                                                                        send_now=True)).status_code)
-            self.assertEqual(205, client.post('/send/email', data=dict(email_sender="sender@g.com",
+            self.assertEqual(200, client.post('/send/email', data=dict(email_sender="sender@g.com",
                                                                        email_recipient="recipient@g.com",
                                                                        message_body="ASYNC EMAIL This is a message body!",
                                                                        )).status_code)

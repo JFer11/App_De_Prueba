@@ -3,11 +3,11 @@ import unittest
 from training.extensions import db
 from training.app import app
 from training.models.users import User
-from training.tests.super_class import setUpAndTearDown
+from training.tests.super_class import SetUpAndTearDown
 from training.utils.test_funcions import create_one_user
 
 
-class BasicTestsSignInSignUp(setUpAndTearDown):
+class BasicTestsSignInSignUp(SetUpAndTearDown):
     """
     We run this test with the following command:
     FLASK_ENV=testing python -m unittest training/tests/test_sign_in_up.py
@@ -157,13 +157,13 @@ class BasicTestsSignInSignUp(setUpAndTearDown):
             # We have to validate the mail well
             self.assertEqual(200, client.get('/mail/validation/Fernando').status_code)
             # We validate again the mail
-            self.assertEqual(205, client.get('/mail/validation/Fernando').status_code)
+            self.assertEqual(202, client.get('/mail/validation/Fernando').status_code)
             # We try to validate a mail from a wrong username
             self.assertEqual(450, client.get('/mail/validation/Fernandosdf').status_code)
             # We validate the other users's email
             self.assertEqual(200, client.get('/mail/validation/Fernando2').status_code)
             # We validate again same users's email
-            self.assertEqual(205, client.get('/mail/validation/Fernando2').status_code)
+            self.assertEqual(202, client.get('/mail/validation/Fernando2').status_code)
 
             # We sign in both user
             self.assertEqual(200, client.post('/login', data=dict(username='Fernando', password='Fernando'), follow_redirects=True).status_code)

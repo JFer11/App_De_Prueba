@@ -2,11 +2,11 @@ import unittest
 
 from training.app import app
 from training.extensions import db
-from training.tests.super_class import setUpAndTearDown
+from training.tests.super_class import SetUpAndTearDown
 from training.utils.test_funcions import create_one_user, login_one_user
 
 
-class BasicTestsLogout(setUpAndTearDown):
+class BasicTestsLogout(SetUpAndTearDown):
     """
     We run this test with the following command:
     FLASK_ENV=testing python -m unittest training/tests/test_logout.py

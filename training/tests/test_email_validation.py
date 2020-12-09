@@ -3,11 +3,11 @@ import unittest
 from training.extensions import db
 from training.app import app
 from training.models.users import User
-from training.tests.super_class import setUpAndTearDown
+from training.tests.super_class import SetUpAndTearDown
 from training.utils.test_funcions import create_one_user, login_one_user, create_one_user_no_mail_validation
 
 
-class BasicTestsEmail(setUpAndTearDown):
+class BasicTestsEmail(SetUpAndTearDown):
     """
     We run this test with the following command:
     FLASK_ENV=testing python -m unittest training/tests/test_email_validation.py
@@ -59,7 +59,7 @@ class BasicTestsEmail(setUpAndTearDown):
             self.assertEqual(200, client.get(f'/mail/validation/{username}').status_code)
 
             # We validate his email for the second time
-            self.assertEqual(205, client.get(f'/mail/validation/{username}').status_code)
+            self.assertEqual(202, client.get(f'/mail/validation/{username}').status_code)
 
             # We log the user who just validated his email
             self.assertEqual(200, client.post('/login', data=dict(username=username, password=password), follow_redirects=True).status_code)

@@ -3,11 +3,11 @@ import unittest
 from training.extensions import db
 from training.app import app
 from training.models.users import User
-from training.tests.super_class import setUpAndTearDown
+from training.tests.super_class import SetUpAndTearDown
 from training.utils.test_funcions import create_one_user, login_one_user, logout
 
 
-class BasicTestsInside(setUpAndTearDown):
+class BasicTestsInside(SetUpAndTearDown):
     """
     We run this test with the following command:
     FLASK_ENV=testing python -m unittest training/tests/test_inside.py

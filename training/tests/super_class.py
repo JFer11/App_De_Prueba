@@ -4,7 +4,7 @@ from training.app import app
 from training.extensions import db
 
 
-class setUpAndTearDown(unittest.TestCase):
+class SetUpAndTearDown(unittest.TestCase):
     """
     Solution from: https://gist.github.com/twolfson/13f5f5784f67fd49b245
 
@@ -19,11 +19,11 @@ class setUpAndTearDown(unittest.TestCase):
         # Inspired via http://stackoverflow.com/questions/1323455/python-unit-test-with-base-and-sub-class/
         # 17696807#17696807
 
-        if cls is not setUpAndTearDown and cls.setUp is not setUpAndTearDown.setUp:
+        if cls is not SetUpAndTearDown and cls.setUp is not SetUpAndTearDown.setUp:
             orig_setUp = cls.setUp
 
             def setUpOverride(self, *args, **kwargs):
-                setUpAndTearDown.setUp(self)
+                SetUpAndTearDown.setUp(self)
                 return orig_setUp(self, *args, **kwargs)
             cls.setUp = setUpOverride
 

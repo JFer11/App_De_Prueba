@@ -6,12 +6,12 @@ from flask import request
 from flask import session
 
 from training.models.users import User
-from training.tests.super_class import setUpAndTearDown
+from training.tests.super_class import SetUpAndTearDown
 from training.utils.common_functions import crypt_password
 from training.utils.test_funcions import create_one_user, login_one_user
 
 
-class BasicTestsBasic(setUpAndTearDown):
+class BasicTestsBasic(SetUpAndTearDown):
     """
     We run this test with the following command:
     FLASK_ENV=testing python -m unittest training/tests/test_basic.py
