@@ -33,7 +33,7 @@ def email_verification(username):
         return "User not exist", 450
     else:
         if our_user.mail_validation:
-            return "The email {} was already validated.".format(our_user.username), 205
+            return "The email {} was already validated.".format(our_user.username), 202
         else:
             our_user.mail_validation = True
             db.session.commit()
@@ -56,7 +56,7 @@ def send_email():
             return render_template('email_form_template.html', form=form, sended=True), 204
         else:
             current_app.task_queue.enqueue('training.background_tasks.tasks.send_email_function', msg)
-            return render_template('email_form_template.html', form=form, sended=True), 205
+            return render_template('email_form_template.html', form=form, sended=True), 200
 
     return render_template('email_form_template.html', form=form), 200
 

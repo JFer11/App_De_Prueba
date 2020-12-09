@@ -44,9 +44,11 @@ def create_app():
     from training.controllers.auth import bp
     from training.controllers.basic_funcionalities import bp as bp2
     from training.controllers.mail import bp as bp3
+    from training.controllers.api import bp as bp4
     app.register_blueprint(bp)
     app.register_blueprint(bp2)
     app.register_blueprint(bp3)
+    app.register_blueprint(bp4)
 
     # Admin
     from flask_admin import Admin
@@ -58,11 +60,6 @@ def create_app():
     with app.app_context():
         db.create_all()
         db.session.commit()
-
-    from training.controllers.api import bp as bp4
-    app.register_blueprint(bp4)
-
-    print("Bien!")
 
     return app
 

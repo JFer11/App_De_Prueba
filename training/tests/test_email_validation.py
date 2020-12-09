@@ -3,34 +3,22 @@ import unittest
 from training.extensions import db
 from training.app import app
 from training.models.users import User
+from training.tests.super_class import SetUpAndTearDown
 from training.utils.test_funcions import create_one_user, login_one_user, create_one_user_no_mail_validation
 
 
-class BasicTests(unittest.TestCase):
+class BasicTestsEmail(SetUpAndTearDown):
+    """
+    We run this test with the following command:
+    FLASK_ENV=testing python -m unittest training/tests/test_email_validation.py
+    So then, FLASK_ENV=testing, and when we import our app,
+    app.config will be configured as app.config.from_object('training.config.TestConfig')
 
-    # executed prior to each test
-    def setUp(self):
-        # We run this test with the following command:
-        # FLASK_ENV=testing python -m unittest training/tests/test_email_validation.py
-        # So then, FLASK_ENV=testing, and when we import our app,
-        # app.config will be configured as app.config.from_object('training.config.TestConfig')
+    If you ran tests with de IDE, is probably that app.config was not configured properly, so perhaps
+    some test will not assert
+    """
 
-        # If you ran tests with de IDE, is probably that app.config was not configured properly, so perhaps
-        # some test will not assert
-
-        self.app = app.test_client()
-        with app.app_context():
-            db.create_all()
-            db.session.commit()
-
-        # Disable sending emails during unit testing
-        self.assertEqual(app.debug, True)
-
-    # executed after each test
-    def tearDown(self):
-        with app.app_context():
-            db.drop_all()
-            db.session.commit()
+    # executed prior to each test, setUp and tearDown, inherited from setUpAndTearDown class
 
     # Test imported function
     def test_create_one_user_no_mail_validation(self):
@@ -71,7 +59,7 @@ class BasicTests(unittest.TestCase):
             self.assertEqual(200, client.get(f'/mail/validation/{username}').status_code)
 
             # We validate his email for the second time
-            self.assertEqual(205, client.get(f'/mail/validation/{username}').status_code)
+            self.assertEqual(202, client.get(f'/mail/validation/{username}').status_code)
 
             # We log the user who just validated his email
             self.assertEqual(200, client.post('/login', data=dict(username=username, password=password), follow_redirects=True).status_code)

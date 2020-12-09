@@ -6,35 +6,23 @@ from flask import request
 from flask import session
 
 from training.models.users import User
+from training.tests.super_class import SetUpAndTearDown
 from training.utils.common_functions import crypt_password
 from training.utils.test_funcions import create_one_user, login_one_user
 
 
-class BasicTests(unittest.TestCase):
-    # executed prior to each test
+class BasicTestsBasic(SetUpAndTearDown):
+    """
+    We run this test with the following command:
+    FLASK_ENV=testing python -m unittest training/tests/test_basic.py
+    So then, FLASK_ENV=testing, and when we import our app,
+    app.config will be configured as app.config.from_object('training.config.TestConfig')
 
-    def setUp(self):
-        # We run this test with the following command:
-        # FLASK_ENV=testing python -m unittest training/tests/test_basic.py
-        # So then, FLASK_ENV=testing, and when we import our app,
-        # app.config will be configured as app.config.from_object('training.config.TestConfig')
+    If you ran tests with de IDE, is probably that app.config was not configured properly, so perhaps
+    some test will not assert
+    """
 
-        # If you ran tests with de IDE, is probably that app.config was not configured properly, so perhaps
-        # some test will not assert
-
-        self.app = app.test_client()
-        with app.app_context():
-            db.create_all()
-            db.session.commit()
-
-        # Disable sending emails during unit testing
-        self.assertEqual(app.debug, True)
-
-    # executed after each test
-    def tearDown(self):
-        with app.app_context():
-            db.drop_all()
-            db.session.commit()
+    # executed prior to each test, setUp and tearDown, inherited from setUpAndTearDown class
 
     # Tests
     def test_main_page(self):
@@ -115,13 +103,13 @@ class BasicTests(unittest.TestCase):
 
     def test_g_before_login(self):
         with app.test_client() as client:
-            self.assertEqual(411, client.get('/g').status_code)
+            self.assertEqual(401, client.get('/g').status_code)
 
     def test_return_test_g(self):
         with app.test_client() as client:
 
             a = client.get('/g')
-            self.assertEqual(411, a.status_code)
+            self.assertEqual(401, a.status_code)
 
             create_one_user(client)
 
