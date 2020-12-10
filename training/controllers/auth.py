@@ -1,16 +1,12 @@
 from flask import Blueprint, request, redirect, render_template, url_for, g, session
-from itsdangerous import URLSafeTimedSerializer
-import os
 
 from training.extensions import db, bcrypt
 from training.models.users import User
 from training.controllers.forms import index_form, login_form
 from training.controllers.function_decorators import login_required
-
+from training.utils.common_variables import serializer
 
 bp = Blueprint('auth', __name__)
-
-serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
 
 
 @bp.before_app_request

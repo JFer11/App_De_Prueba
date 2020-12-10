@@ -1,16 +1,13 @@
-import json
-import os
 from flask import Blueprint, jsonify, abort, make_response, request, session
-from itsdangerous import URLSafeTimedSerializer
 
 from training.controllers.function_decorators import login_required
 from training.utils.common_functions import how_is_logged
 from training.extensions import bcrypt, db
-from training.models.users import User
+from training.models.users import User, UserSchema
+from training.utils.common_variables import serializer
 
 bp = Blueprint('api', __name__, url_prefix='/api')
 
-serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
 
 tasks = [
     {
@@ -61,7 +58,7 @@ To avoid this response when a 404 error was generated:
 
 @bp.errorhandler(404)
 def not_found(error):
-    return make_response(jsonify({'error': 'Not found doggy'}), 404)
+    return make_response(jsonify({'Error': 'Not found doggy'}), 404)
 
 
 @bp.route('/example', methods=['POST'])
@@ -95,10 +92,11 @@ def repeated_fields(fields):
 @bp.route('/register', methods=['POST'])
 def sign_up():
     if not request.json or not 'username' in request.json or not 'password' in request.json or not 'email' in request.json:
-        abort(400)
+        return make_response(jsonify({'Error': 'Your json body is wrong, we expect username, password and email!'}), 400)
     else:
         if repeated_fields(request.json):
-            abort(400)
+            return make_response(jsonify({'Error': 'username or email already registered!'}),
+                                 400)
 
         id_user = request.json.get('username')
         username = request.json.get('username')
@@ -122,15 +120,15 @@ def sign_in():
     """
 
     if not request.json or not 'username' in request.json or not 'password' in request.json:
-        abort(400)
+        return make_response(jsonify({'Error': 'Your json body is wrong, we expect username, password and email!'}), 400)
     else:
         our_user = User.query.filter_by(id=request.json.get('username')).first()
 
         if our_user is None:
-            abort(400)
+            return make_response(jsonify({'Error': 'User does not exist!'}), 404)
         else:
             if our_user.mail_validation is False:
-                abort(401)
+                return make_response(jsonify({'Error': 'Not validated email!'}), 401)
             else:
                 if bcrypt.check_password_hash(our_user.password, request.json.get('password')):
                     token = serializer.dumps(request.json.get('username'), salt='login')
@@ -139,7 +137,7 @@ def sign_in():
                     }
                     return jsonify(body), 200
                 else:
-                    return "Bad password", 450
+                    return make_response(jsonify({'Error': 'Bad password!'}), 401)
 
 
 @bp.route('/verify/email/<string:username>')
@@ -147,17 +145,14 @@ def verify_email(username):
     our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:
-        abort(404)
-
-    if our_user is None:
-        return "User not exist", 450
+        return make_response(jsonify({'Error': 'User does not exist!'}), 404)
     else:
         if our_user.mail_validation:
-            return "The email {} was already validated.".format(our_user.username), 205
+            return jsonify({"Detail": "The email {} was already validated.".format(our_user.username)}), 202
         else:
             our_user.mail_validation = True
             db.session.commit()
-            return "Email from user {} was successfully validated.".format(our_user.username), 200
+            return jsonify({"Detail": "Email from user {} was successfully validated.".format(our_user.username)}), 200
 
 
 @bp.route('/users/data/<string:username>')
@@ -165,18 +160,12 @@ def return_user_data(username):
     our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:
-        abort(404)
+        return make_response(jsonify({'Error': 'User does not exist!'}), 404)
 
-    # user_json = json.dumps(our_user.__dict__)
-    user_json = {
-        "username": our_user.username,
-        "email": our_user.email,
-        "password": our_user.password,
-        "mail_validation": our_user.mail_validation,
-        "created_at": our_user.created_at
-    }
+    user_schema = UserSchema()
+    output = user_schema.dump(our_user)
 
-    return user_json, 211
+    return jsonify(output), 200
 
 
 @login_required
@@ -186,15 +175,9 @@ def return_logged_users_data():
     our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:
-        abort(404)
+        return make_response(jsonify({'Error': 'User does not exist!'}), 404)
 
-    # user_json = json.dumps(our_user.__dict__)
-    user_json = {
-        "username": our_user.username,
-        "email": our_user.email,
-        "password": our_user.password,
-        "mail_validation": our_user.mail_validation,
-        "created_at": our_user.created_at
-    }
+    user_schema = UserSchema()
+    output = user_schema.dump(our_user)
 
-    return user_json, 211
+    return jsonify(output), 200

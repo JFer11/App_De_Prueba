@@ -1,11 +1,8 @@
 from flask import request, session
-from itsdangerous import URLSafeTimedSerializer
-import os
 
 from training.extensions import bcrypt, db
 from training.models.users import User
-
-serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
+from training.utils.common_variables import serializer
 
 
 def crypt_password(raw):
