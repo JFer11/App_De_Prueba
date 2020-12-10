@@ -11,6 +11,8 @@ bp = Blueprint('auth', __name__)
 
 @bp.before_app_request
 def user_to_g():
+    """ Copy user to g if any user is logged"""
+
     username = session.get('username')
     header = request.headers.get('auth_token')
 

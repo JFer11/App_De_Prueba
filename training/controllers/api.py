@@ -1,7 +1,6 @@
-from flask import Blueprint, jsonify, abort, make_response, request, session
+from flask import Blueprint, jsonify, abort, make_response, request, session, g
 
 from training.controllers.function_decorators import login_required
-from training.utils.common_functions import how_is_logged
 from training.extensions import bcrypt, db
 from training.models.users import User, UserSchema
 from training.utils.common_variables import serializer
@@ -171,7 +170,7 @@ def return_user_data(username):
 @login_required
 @bp.route('/users/data')
 def return_logged_users_data():
-    username = how_is_logged()
+    username = g.user.username
     our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:
