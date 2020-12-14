@@ -36,6 +36,9 @@ def create_app():
     from training.extensions import migrate
     migrate.init_app(app, db)
 
+    from training.extensions import marshmallow
+    marshmallow.init_app(app)
+
     app.redis = Redis.from_url(os.environ.get('REDIS_URL'))
     app.task_queue = rq.Queue('my-app-tasks', connection=app.redis)
 
@@ -82,8 +85,6 @@ def create_app():
     with app.app_context():
         db.create_all()
         db.session.commit()
-
-    print("Bien!")
 
     return app
 

@@ -1,19 +1,19 @@
 from flask import Blueprint, request, redirect, render_template, url_for, g, session
-from itsdangerous import URLSafeTimedSerializer, BadSignature
-import os
+from itsdangerous import BadSignature
 
 from training.extensions import db, bcrypt
 from training.models.users import User
 from training.controllers.forms import index_form, login_form
 from training.controllers.function_decorators import login_required
+from training.utils.common_variables import serializer
 
 bp = Blueprint('auth', __name__)
-
-serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
 
 
 @bp.before_app_request
 def user_to_g():
+    """ Copy user to g if any user is logged"""
+
     username = session.get('username')
     header = request.headers.get('auth_token')
 

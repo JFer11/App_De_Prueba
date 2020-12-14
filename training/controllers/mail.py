@@ -1,15 +1,12 @@
 from flask import Blueprint, request, render_template, url_for, redirect, current_app, copy_current_request_context
 from flask_mail import Message
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired
-import os
+from itsdangerous import SignatureExpired
 
 from training.controllers.forms import new_password_form, recover_form, send_email_form
 from training.extensions import mail, bcrypt
 from training.models.users import User
 from training.extensions import db
-
-
-serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
+from training.utils.common_variables import serializer
 
 bp = Blueprint('mail', __name__)
 
@@ -33,7 +30,7 @@ def email_verification(username):
         return "User not exist", 450
     else:
         if our_user.mail_validation:
-            return "The email {} was already validated.".format(our_user.username), 205
+            return "The email {} was already validated.".format(our_user.username), 202
         else:
             our_user.mail_validation = True
             db.session.commit()
@@ -56,7 +53,7 @@ def send_email():
             return render_template('email_form_template.html', form=form, sended=True), 204
         else:
             current_app.task_queue.enqueue('training.background_tasks.tasks.send_email_function', msg)
-            return render_template('email_form_template.html', form=form, sended=True), 205
+            return render_template('email_form_template.html', form=form, sended=True), 200
 
     return render_template('email_form_template.html', form=form), 200
 

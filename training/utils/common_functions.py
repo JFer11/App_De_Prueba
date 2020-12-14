@@ -1,9 +1,4 @@
-from itsdangerous import URLSafeTimedSerializer
-import os
-
 from training.extensions import bcrypt
-
-serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
 
 
 def crypt_password(raw):
