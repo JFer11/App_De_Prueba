@@ -1,15 +1,12 @@
 from flask import Blueprint, request, render_template, url_for, redirect, current_app, copy_current_request_context
 from flask_mail import Message
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired
-import os
+from itsdangerous import SignatureExpired
 
 from training.controllers.forms import new_password_form, recover_form, send_email_form
 from training.extensions import mail, bcrypt
 from training.models.users import User
 from training.extensions import db
-
-
-serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
+from training.utils.common_variables import serializer
 
 bp = Blueprint('mail', __name__)
 

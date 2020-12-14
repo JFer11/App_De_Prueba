@@ -4,17 +4,26 @@ from training.extensions import db, bcrypt
 from training.models.users import User
 from training.controllers.forms import index_form, login_form
 from training.controllers.function_decorators import login_required
-
+from training.utils.common_variables import serializer
 
 bp = Blueprint('auth', __name__)
 
 
 @bp.before_app_request
 def user_to_g():
+    """ Copy user to g if any user is logged"""
+
     username = session.get('username')
+    header = request.headers.get('auth_token')
+
     if username is not None:
         # If a user has a session, it will be always in the database
         user = db.session.query(User).filter_by(id=username).first()
+        g.user = user
+    elif header is not None:
+        username_token = serializer.loads(header, salt='login')
+
+        user = db.session.query(User).filter_by(id=username_token).first()
         g.user = user
     else:
         g.user = None
@@ -74,7 +83,7 @@ def sign_in():
             else:
                 return render_template('login.html', form=form, alert_mail=True), 451
         else:
-            return render_template('login.html', form=form, alert=True), 450
+                return render_template('login.html', form=form, alert=True), 450
 
     return render_template('login.html', form=form), 800
 

@@ -38,6 +38,11 @@
     For one test: ```./bin/test training/tests/test_basic.py```
     
     Or to run all tests: ```./bin/test```
+    
+ 
+ To run app, before:
+ export FLASK_APP=training.app
+
  
  
  Migrations:
