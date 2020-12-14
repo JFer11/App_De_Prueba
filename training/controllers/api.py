@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, abort, make_response, request, session, g
+from flask import Blueprint, jsonify, abort, request, session, g
 
 from training.controllers.function_decorators import login_required
 from training.extensions import bcrypt, db
@@ -57,7 +57,7 @@ To avoid this response when a 404 error was generated:
 
 @bp.errorhandler(404)
 def not_found(error):
-    return make_response(jsonify({'Error': 'Not found doggy'}), 404)
+    return jsonify({'Error': 'Not found doggy'}), 404
 
 
 @bp.route('/example', methods=['POST'])
@@ -91,11 +91,10 @@ def repeated_fields(fields):
 @bp.route('/register', methods=['POST'])
 def sign_up():
     if not request.json or not 'username' in request.json or not 'password' in request.json or not 'email' in request.json:
-        return make_response(jsonify({'Error': 'Your json body is wrong, we expect username, password and email!'}), 400)
+        return jsonify({'Error': 'Your json body is wrong, we expect username, password and email!'}), 400
     else:
         if repeated_fields(request.json):
-            return make_response(jsonify({'Error': 'username or email already registered!'}),
-                                 400)
+            return jsonify({'Error': 'username or email already registered!'}), 400
 
         id_user = request.json.get('username')
         username = request.json.get('username')
@@ -119,15 +118,15 @@ def sign_in():
     """
 
     if not request.json or not 'username' in request.json or not 'password' in request.json:
-        return make_response(jsonify({'Error': 'Your json body is wrong, we expect username, password and email!'}), 400)
+        return jsonify({'Error': 'Your json body is wrong, we expect username, password and email!'}), 400
     else:
         our_user = User.query.filter_by(id=request.json.get('username')).first()
 
         if our_user is None:
-            return make_response(jsonify({'Error': 'User does not exist!'}), 404)
+            return jsonify({'Error': 'User does not exist!'}), 404
         else:
             if our_user.mail_validation is False:
-                return make_response(jsonify({'Error': 'Not validated email!'}), 401)
+                return jsonify({'Error': 'Not validated email!'}), 401
             else:
                 if bcrypt.check_password_hash(our_user.password, request.json.get('password')):
                     token = serializer.dumps(request.json.get('username'), salt='login')
@@ -136,7 +135,7 @@ def sign_in():
                     }
                     return jsonify(body), 200
                 else:
-                    return make_response(jsonify({'Error': 'Bad password!'}), 401)
+                    return jsonify({'Error': 'Bad password!'}), 401
 
 
 @bp.route('/verify/email/<string:username>')
@@ -144,7 +143,7 @@ def verify_email(username):
     our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:
-        return make_response(jsonify({'Error': 'User does not exist!'}), 404)
+        return jsonify({'Error': 'User does not exist!'}), 404
     else:
         if our_user.mail_validation:
             return jsonify({"Detail": "The email {} was already validated.".format(our_user.username)}), 202
@@ -159,7 +158,7 @@ def return_user_data(username):
     our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:
-        return make_response(jsonify({'Error': 'User does not exist!'}), 404)
+        return jsonify({'Error': 'User does not exist!'}), 404
 
     user_schema = UserSchema()
     output = user_schema.dump(our_user)
@@ -174,7 +173,7 @@ def return_logged_users_data():
     our_user = User.query.filter_by(id=username).first()
 
     if our_user is None:
-        return make_response(jsonify({'Error': 'User does not exist!'}), 404)
+        return jsonify({'Error': 'User does not exist!'}), 404
 
     user_schema = UserSchema()
     output = user_schema.dump(our_user)
