@@ -1,5 +1,5 @@
 from datetime import datetime
-from training.extensions import db
+from training.extensions import db, marshmallow
 
 
 class Article(db.Model):
@@ -14,3 +14,17 @@ class Article(db.Model):
 
 	def __str__(self):
 		return self.id
+
+
+class ArticleSchema(marshmallow.SQLAlchemySchema):
+	"""This class is necessary for marshmallow. Marshmallow is used for serialization."""
+	class Meta:
+		model = Article
+
+	# Here we specify which fields we want to serialize
+	# We want to ignore path_to_image, so its filed was not included below
+	id = marshmallow.auto_field()
+	title = marshmallow.auto_field()
+	body = marshmallow.auto_field()
+	created_at = marshmallow.auto_field()
+	user_id = marshmallow.auto_field()
