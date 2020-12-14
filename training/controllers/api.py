@@ -69,7 +69,7 @@ def sign_in():
                     return "Bad password", 450
 
 
-@bp.route('/verify/email/<string:username>')
+@bp.route('/verify/email/<string:username>', methods=['POST'])
 def verify_email(username):
     our_user = User.query.filter_by(id=username).first()
 
@@ -77,13 +77,13 @@ def verify_email(username):
         abort(404)
     else:
         if our_user.mail_validation:
-            detail = {'detail': "Email was already validated."}
+            detail = {'Detail': "Email was already validated."}
             return jsonify(detail), 202
         else:
             our_user.mail_validation = True
             db.session.commit()
 
-            detail = {'detail': "Email from user was successfully validated."}
+            detail = {'Detail': "Email from user was successfully validated."}
             return jsonify(detail), 200
 
 

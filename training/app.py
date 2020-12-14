@@ -65,12 +65,14 @@ def create_app():
     from training.controllers.api import bp as bp4
     from training.controllers.user import bp as bp5
     from training.controllers.user import bp as bp6
+    from training.controllers.articles import bp as bp7
     app.register_blueprint(bp)
     app.register_blueprint(bp2)
     app.register_blueprint(bp3)
     app.register_blueprint(bp4)
     app.register_blueprint(bp5)
     app.register_blueprint(bp6)
+    app.register_blueprint(bp7)
 
     # Admin
     from flask_admin import Admin
