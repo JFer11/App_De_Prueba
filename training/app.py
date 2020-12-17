@@ -49,6 +49,7 @@ def create_app():
     @app.route('/static/<path:path>')
     def send_static(path):
         return send_from_directory('static', path)
+    # SAME AS ABOVE: app.route('/static/<path:path>')(functools.partial(send_from_directory, 'static'))
 
     SWAGGER_URL = '/swagger'  # URL of the swagger UI
     API_URL = '/static/swagger.json'  # URL of the swagger json
