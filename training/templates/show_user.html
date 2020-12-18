@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User</title>
+</head>
+<body>
+	<img src="/user/uploads/{{user.path_to_image}}">
+	<ul>
+		<h1>User: {{ user.username }}</h1>
+		<li>Id: {{ user.id }}</li>
+		<li>Image: {{ user.path_to_image }}</li>
+		<li>Email: {{ user.email }}</li>
+		<li>Created at: {{ user.created_at }}</li>
+    </ul>
+</body>
+</html>

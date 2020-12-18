@@ -10,6 +10,7 @@ class BaseConfig(object):
     MAIL_DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER')
 
 
 class TestConfig(BaseConfig):

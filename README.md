@@ -1,3 +1,11 @@
+ 
+ To run the project:
+ ---
+ To run app, before: ```export FLASK_APP=training.app```
+
+ Then: ```flask run```
+ 
+
  To enable a local email server
  ---
  To use an emulated email server, Python provides one that is very handy that you can start in a
@@ -40,10 +48,7 @@
     Or to run all tests: ```./bin/test```
     
  
- To run app, before:
- export FLASK_APP=training.app
-
- 
+ IMPORTANT: First option run 46 tests and one fails, and Second Option run 45 successfully
  
  Migrations:
  ---

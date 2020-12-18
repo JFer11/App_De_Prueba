@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register Page</title>
+</head>
+<body>
+
+	<h1>Welcome {{ username }}</h1>
+
+    {% from "macro_Form_Index.html" import render_field %}
+
+	<form method=post enctype="multipart/form-data">
+		<dl>
+	    {{ render_field(form.image) }}
+	    <input type="submit" name="boton">
+  		</dl>
+	</form>
+
+	{%if alert_no_file%}
+		<p>No file uploaded!</p>
+	{%endif%}
+
+	{%if alert_big_file%}
+		<p>You try to upload a huge file. Max 128 Mb!</p>
+	{%endif%}
+</body>
+</html>

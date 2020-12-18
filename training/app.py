@@ -2,7 +2,10 @@ import os
 from flask import Flask, render_template
 from redis import Redis
 import rq
+from flask_swagger_ui import get_swaggerui_blueprint
+from flask import send_from_directory
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -43,16 +46,35 @@ def create_app():
     def first_page():
         return render_template("nothing.html"), 200
 
+    @app.route('/static/<path:path>')
+    def send_static(path):
+        return send_from_directory('static', path)
+    # SAME AS ABOVE: app.route('/static/<path:path>')(functools.partial(send_from_directory, 'static'))
+
+    SWAGGER_URL = '/swagger'  # URL of the swagger UI
+    API_URL = '/static/swagger.json'  # URL of the swagger json
+    swaggerui_blueprint = get_swaggerui_blueprint(
+        SWAGGER_URL,
+        API_URL,
+        config={
+            'app_name': 'Training App'
+        }
+    )
+    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
     # Blueprints
     from training.controllers.auth import bp
     from training.controllers.basic_funcionalities import bp as bp2
     from training.controllers.mail import bp as bp3
     from training.controllers.api import bp as bp4
-
+    from training.controllers.user import bp as bp5
+    from training.controllers.user import bp as bp6
     app.register_blueprint(bp)
     app.register_blueprint(bp2)
     app.register_blueprint(bp3)
     app.register_blueprint(bp4)
+    app.register_blueprint(bp5)
+    app.register_blueprint(bp6)
 
     # Admin
     from flask_admin import Admin
