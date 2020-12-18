@@ -1,19 +1,20 @@
 from flask import Blueprint, request, redirect, render_template, url_for, g, session
-from itsdangerous import URLSafeTimedSerializer, BadSignature
-import os
+from itsdangerous import BadSignature
 
 from training.extensions import db, bcrypt
 from training.models.users import User
 from training.controllers.forms import index_form, login_form
 from training.controllers.function_decorators import login_required
+from training.utils.common_functions import test_unique_fields
+from training.utils.common_variables import serializer
 
 bp = Blueprint('auth', __name__)
-
-serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
 
 
 @bp.before_app_request
 def user_to_g():
+    """ Copy user to g if any user is logged"""
+
     username = session.get('username')
     header = request.headers.get('auth_token')
 
@@ -32,19 +33,9 @@ def user_to_g():
         # We check if user is None, because we could pass a wrong auth_token through the api
         if user is not None:
             g.user = user
-        else:
-            g.user = None
     else:
         g.user = None
     return None
-
-
-def test_unique_fields(form):
-    if User.query.filter_by(id=form['username']).first() or User.query.filter_by(
-            email=form['email']).first() is not None:
-        return False
-    else:
-        return True
 
 
 @bp.route('/register', methods=['GET', 'POST'])
@@ -53,7 +44,7 @@ def signup():
 
     if request.method == 'POST':
         if form.validate():
-            if test_unique_fields(request.form):
+            if test_unique_fields(request.form['username'], request.form['email']):
                 id_user = request.form['username']
                 username = request.form['username']
                 password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')

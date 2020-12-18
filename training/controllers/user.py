@@ -1,8 +1,8 @@
+import os
 from flask import Blueprint, request, redirect, render_template, url_for, g, current_app, flash, make_response, \
     jsonify, abort
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
-import os
 
 from training.extensions import db
 from training.controllers.function_decorators import login_required
@@ -38,15 +38,6 @@ def not_found(error):
                                   "param": error}), 400)
 
 
-def rename(filename):
-    raw_email = str(g.user.email)
-    a = raw_email + "_" + filename
-    print(raw_email)
-    print(filename)
-    print(a)
-    return a
-
-
 def create_folder_if_not_exist(user_folder):
     path = os.path.join(current_app.config['UPLOAD_FOLDER'], user_folder)
     if not os.path.exists(path):
@@ -67,10 +58,9 @@ def add_avatar_image():
 
         file = request.files.get('image')
 
-        # if ruse does not select file, browser also
-        # submit an empty part without filename.
-        # However, frontend should not let submit if no file was uploaded. Because of validators.
-        # This check is for the api.
+        """ If user does not select file, browser also submit an empty part without filename.
+        However, frontend should not let submit if no file was uploaded. Because of validators.
+        This check is for the api. """
         if file.filename == '':
             flash('No selected file')
             return render_template('modify_image.html', form=form, username=g.user, alert_no_file=True), 201

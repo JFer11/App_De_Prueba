@@ -1,9 +1,8 @@
 from functools import wraps
 from flask import session, render_template, request
+from itsdangerous import BadSignature
 
-import os
-from itsdangerous import URLSafeTimedSerializer, BadSignature
-serializer = URLSafeTimedSerializer(os.environ.get('SECRET_KEY'))
+from training.utils.common_variables import serializer
 
 
 def login_required(function):

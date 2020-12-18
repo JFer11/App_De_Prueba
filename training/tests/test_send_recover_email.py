@@ -5,47 +5,38 @@ from unittest.mock import patch
 from training.app import app
 from training.extensions import mail, db
 from training.models.users import User
+from training.tests.super_class import SetUpAndTearDown
 from training.utils.test_funcions import create_one_user_no_mail_validation
 
 
 # from training.background_tasks.tasks import send_email_function
 
 
-class BasicTests(unittest.TestCase):
+class BasicTestsRecoverEmail(SetUpAndTearDown):
+    """
+    We run this test with the following command:
+    FLASK_ENV=testing python -m unittest training/tests/test_send_recover_email.py
+    So then, FLASK_ENV=testing, and when we import our app,
+    app.config will be configured as app.config.from_object('training.config.TestConfig')
 
-    # executed prior to each test
+    If you ran tests with de IDE, is probably that app.config was not configured properly, so perhaps
+    some test will not assert
+
+    Important: If you want to run tests from this module, with the IDE, is even more difficult, because
+    not only you have to overwrite app.config.from_object('training.config.TestConfig'), but also
+    you will have to import mail from training.extensions because app.mail will have the first configuration
+    and will be set with Testing=False.
+    To do so:
+    The line below is ABSOLUTELY NECESSARY, if not, the
+    mail will have the previous application that was configured with TESTING = False
+    mail.init_app(app)
+    """
+
+    # executed prior to each test, setUp and tearDown, inherited from setUpAndTearDown class
+
     def setUp(self):
-        # We run this test with the following command:
-        # FLASK_ENV=testing python -m unittest training/tests/test_send_recover_email.py
-        # So then, FLASK_ENV=testing, and when we import our app,
-        # app.config will be configured as app.config.from_object('training.config.TestConfig')
-
-        # If you ran tests with de IDE, is probably that app.config was not configured properly, so perhaps
-        # some test will not assert
-
-        # Important: If you want to run tests from this module, with the IDE, is even more difficult, because
-        # not only you have to overwrite app.config.from_object('training.config.TestConfig'), but also
-        # you will have to import mail from training.extensions because app.mail will have the first configuration
-        # and will be set with Testing=False.
-        # To do so:
-        # The line below is ABSOLUTELY NECESSARY, if not, the
-        # mail will have the previous application that was configured with TESTING = False
-        # mail.init_app(app)
-
-        self.app = app.test_client()
-        with app.app_context():
-            db.create_all()
-            db.session.commit()
+        """Do more custom setup just for this class here"""
         mail.suppress = True
-
-        # Disable sending emails during unit testing
-        self.assertEqual(app.debug, True)
-
-    # executed after each test
-    def tearDown(self):
-        with app.app_context():
-            db.drop_all()
-            db.session.commit()
 
     # Test imported function
     def test_create_one_user_no_mail_validation(self):
@@ -95,7 +86,7 @@ class BasicTests(unittest.TestCase):
             """
 
             mock.return_value = 40
-            self.assertEqual(205, client.post('/send/email',
+            self.assertEqual(200, client.post('/send/email',
                                               data=dict(email_sender="sender@g.com", email_recipient="recipient@g.com",
                                                         message_body="ASYNC EMAIL, This is a message body!"),
                                               follow_redirects=True).status_code)
@@ -109,7 +100,7 @@ class BasicTests(unittest.TestCase):
                                                                        email_recipient="recipient@g.com",
                                                                        message_body="SYNC MAIL This is a message body!",
                                                                        send_now=True)).status_code)
-            self.assertEqual(205, client.post('/send/email', data=dict(email_sender="sender@g.com",
+            self.assertEqual(200, client.post('/send/email', data=dict(email_sender="sender@g.com",
                                                                        email_recipient="recipient@g.com",
                                                                        message_body="ASYNC EMAIL This is a message body!",
                                                                        )).status_code)
