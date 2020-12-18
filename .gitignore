@@ -2,4 +2,3 @@
 .env
 .idea
 /uploads/*
-!/uploads/__init__.py
