@@ -3,9 +3,17 @@
  ---
  To run app, before: ```export FLASK_APP=training.app```
 
- Then: ```flask run```
+ Then: You have to be inside your virtual environment.
+ I use ```pyenv activate <custom_virtual_environment_name>```
  
+ Finally: ```flask run```
+ 
+ To access postgres database:
+ ---
+ ```sudo -u postgres psql```
 
+ ---------------------
+ 
  To enable a local email server
  ---
  To use an emulated email server, Python provides one that is very handy that you can start in a
@@ -23,11 +31,7 @@
  Then:
  ```$ rq worker my-app-tasks```
  Remember that "my-app-tasks" is the name for the redis server that the worker will be connected.
-    
- 
- To access postgres database:
- ---
- ```sudo -u postgres psql```
+
   
  How to run tests:
  ---
@@ -52,6 +56,7 @@
  
  Migrations:
  ---
+
  Only the first time, we follow step number one:
  1. With an empty database:
  ```flask db init```

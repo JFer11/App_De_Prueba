@@ -1,6 +1,8 @@
 from datetime import datetime
 from training.extensions import db, marshmallow
 from marshmallow import fields, validate
+# It is necessary to import Article because db.relationship will use it
+from training.models.articles import Article
 
 
 class User(db.Model):
@@ -12,6 +14,8 @@ class User(db.Model):
 	mail_validation = db.Column(db.Boolean, unique=False, default=False)
 	created_at = db.Column(db.DateTime(), default=datetime.now())
 	path_to_image = db.Column(db.String(50), unique=True)
+	# db.relationship('Article', because here we reference the object "Article"
+	articles = db.relationship('Article', backref='author')
 
 	def __str__(self):
 		return self.username

@@ -91,7 +91,7 @@ def sign_in():
                 return jsonify({'Error': 'Bad password!'}), 401
 
 
-@bp.route('/verify/email/<string:username>')
+@bp.route('/verify/email/<string:username>', methods=['POST'])
 def verify_email(username):
     our_user = User.query.filter_by(id=username).first()
 
