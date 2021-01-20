@@ -70,6 +70,7 @@ def create_app():
     from training.controllers.user import bp as bp5
     from training.controllers.user import bp as bp6
     from training.controllers.articles import bp as bp7
+
     app.register_blueprint(bp)
     app.register_blueprint(bp2)
     app.register_blueprint(bp3)

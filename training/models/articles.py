@@ -1,5 +1,6 @@
 from datetime import datetime
 from training.extensions import db, marshmallow
+from marshmallow import fields, validate
 
 
 class Article(db.Model):
@@ -21,10 +22,20 @@ class ArticleSchema(marshmallow.SQLAlchemySchema):
 	class Meta:
 		model = Article
 
-	# Here we specify which fields we want to serialize
+	# Here we specify which fields we want to serialize.
 	# We want to ignore path_to_image, so its filed was not included below
 	id = marshmallow.auto_field()
 	title = marshmallow.auto_field()
 	body = marshmallow.auto_field()
 	created_at = marshmallow.auto_field()
 	user_id = marshmallow.auto_field()
+
+
+class ArticleSchemaValidation(marshmallow.SQLAlchemySchema):
+	"""Here we validate important fields to create an Article."""
+	class Meta:
+		model = Article
+
+	# Here we specify which fields we want to validate.
+	title = fields.Str(validate=validate.Length(min=1, max=50), required=True)
+	body = fields.Str(validate=validate.Length(min=1, max=1000), required=True)

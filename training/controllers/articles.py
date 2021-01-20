@@ -1,21 +1,34 @@
 from flask import Blueprint, request, jsonify, g
+from marshmallow import ValidationError
 
 from training.controllers.function_decorators import login_required
 from training.extensions import db
-from training.models.articles import Article, ArticleSchema
+from training.models.articles import Article, ArticleSchema, ArticleSchemaValidation
 from training.models.users import User
 
 bp = Blueprint('article', __name__, url_prefix='/articles')
 
 
+def validate_article(request_json):
+    try:
+        ArticleSchemaValidation().load(request_json)
+        return {
+            "Valid": True,
+            "Details": "All fields are valid."
+        }
+    except ValidationError as err:
+        return {
+            "Valid": False,
+            "Details": [err.messages, err.valid_data]
+        }
+
+
 @bp.route('/register', methods=['POST'])
 @login_required
 def create_article():
-    if not request.json or "title" not in request.json or "body" not in request.json:
-        return jsonify({'Error': 'Bad request, "title" and "body" is required!'}), 400
-
-    if len(request.json['title']) > 50 or len(request.json['body']) > 1000:
-        return jsonify({'Error': 'Bad request, max length for "title" is 50 and max length for "body" is 1000.'}), 400
+    valid = validate_article(request.json)
+    if valid['Valid'] is False:
+        return jsonify({'Error': valid['Details']}), 400
 
     article = Article(title=request.json['title'], body=request.json['body'], author=g.user)
     db.session.add(article)
@@ -31,14 +44,14 @@ def create_article():
     }), 200
 
 
-def get_articles(user):
+def get_queryset_asc_or_desc_articles(user):
     order_by = request.headers.get('order_by_date', 'DESC')
     if order_by == "ASC":
-        return Article.query.filter_by(user_id=user.id).order_by(Article.created_at.asc()).all()
+        return Article.query.filter_by(user_id=user.id).order_by(Article.created_at.asc())
     elif order_by == "DESC":
-        return Article.query.filter_by(user_id=user.id).order_by(Article.created_at.desc()).all()
+        return Article.query.filter_by(user_id=user.id).order_by(Article.created_at.desc())
     else:
-        return Article.query.filter_by(user_id=user.id).order_by(Article.created_at.desc()).all()
+        return Article.query.filter_by(user_id=user.id).order_by(Article.created_at.desc())
 
 
 def get_user(username):
@@ -49,6 +62,59 @@ def get_user(username):
     return user
 
 
+def paginated_articles(schema_class, limit, offset, queryset):
+    if limit is None:
+        raw_articles_list = queryset.offset(offset).all()
+    else:
+        raw_articles_list = queryset.offset(offset).limit(limit).all()
+
+    article_schema = schema_class()  # Here, will be ArticleSchema()
+    result = list(map(lambda article: article_schema.dump(article), raw_articles_list))
+
+    """
+    Classical solution:
+    
+    result = []
+
+    article_schema = schema_class()  # Here, will be ArticleSchema()
+    for article in raw_articles_list:
+        result.append(article_schema.dump(article))
+    """
+
+    return result
+
+
+def get_offset_articles():
+    try:
+        offset = request.args.get('offset', default=0, type=int)
+    except ValueError:
+        return jsonify({'Detail': 'Bad URL, check your URL parameters.'}), 400
+
+    if offset < 0:
+        return 0
+    return offset
+
+
+def get_limit_articles():
+    MAX_LIMIT = 20
+    try:
+        limit = request.args.get('limit', default=MAX_LIMIT, type=int)
+    except ValueError:
+        return jsonify({'Detail': 'Bad URL, check your URL parameters.'}), 400
+
+    if limit < 0:
+        return None
+
+    if limit > MAX_LIMIT:
+        return jsonify({'Detail': f'Bad URL, check your URL parameters (Limit parameter number is too large, '
+                                  f'Max Limit={MAX_LIMIT}).'}), 400
+    return limit
+
+
+def get_count_articles(user):
+    return Article.query.filter_by(user_id=user.id).count()
+
+
 @bp.route('/list', methods=['GET'])
 @bp.route('/list/<username>', methods=['GET'])
 @login_required
@@ -57,57 +123,14 @@ def list_articles(username=None):
     if user is None:
         return jsonify({'Detail': 'Bad URL, "user" not found.'}), 404
 
-    MAX_LIMIT = 20
-    response = {
-        'Detail': 'List of articles.'
-    }
+    queryset = get_queryset_asc_or_desc_articles(user)
+    offset = get_offset_articles()
+    limit = get_limit_articles()
+    count = get_count_articles(user)
+    result = paginated_articles(ArticleSchema, limit, offset, queryset)
 
-    if not request.args:
-        articles_list = get_articles(user)
-        response['Total articles'] = len(articles_list)
-    else:
-        # We get the parameters
-        try:
-            start = request.args.get('start', default=1, type=int)
-            limit = request.args.get('limit', default=MAX_LIMIT, type=int)
-        except ValueError:
-            return jsonify({'Detail': 'Bad URL, check your URL parameters.'}), 400
+    response = {'Detail': 'List of articles.', 'Total articles': count, 'Offset parameter': offset,
+                'Limit parameter': limit, 'Result': result}
 
-        # We get all articles from logged user.
-        articles_list_all = get_articles(user)
-
-        # We validate parameters.
-        length = len(articles_list_all)
-
-        if start < 1 or limit < 1:
-            return jsonify({'Detail': 'Bad URL, check your URL parameters (Negative or Zero values).'}), 400
-        if start > length:
-            return jsonify({'Detail': 'Bad URL, check your URL parameters (Start parameter number is too large).'}), 400
-        if limit > MAX_LIMIT:
-            return jsonify({'Detail': f'Bad URL, check your URL parameters (Limit parameter number is too large, '
-                                      f'Max Limit={MAX_LIMIT}).'}), 400
-
-        # We get the sublist of articles based on the parameters.
-        end = start - 1 + limit
-        if length < start-1+limit:
-            end = length
-
-        articles_list = articles_list_all[start-1:end]
-
-        # We add interesting information about the original request to the response body.
-        response['Total articles'] = length
-        response['Start parameter'] = start
-        response['Limit parameter'] = limit
-
-    # We add to the response body the items that were selected.
-    article_schema = ArticleSchema()
-    for article in articles_list:
-        article_schema.dump(article)
-        if 'Articles' in response:
-            output = article_schema.dump(article)
-            response['Articles'].append(output)
-        else:
-            output = article_schema.dump(article)
-            response['Articles'] = [output]
-
+    # if offset > count: no article will be displayed
     return jsonify(response), 200
